@@ -24,25 +24,36 @@ rm -f "$DMG_NAME" "$TMP_DMG"
 # create a temporary read/write DMG
 hdiutil create -size 300m -fs HFS+ -volname "$VOLUME_NAME" "$TMP_DMG"
 
-# mount it
-MOUNT_POINT=$(hdiutil attach "$TMP_DMG" | grep "Volumes" | awk '{print $3}')
+# mount it and get mount point
+# we use -plist to get structured data and then parse out the mount point
+# this is robust against spaces in the volume name
+MOUNT_POINT=$(hdiutil attach "$TMP_DMG" -plist | grep -A1 'mount-point' | tail -n1 | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+
+if [ -z "$MOUNT_POINT" ]; then
+    echo "Error: Failed to mount $TMP_DMG"
+    exit 1
+fi
+
+printf "Mounted at: $MOUNT_POINT\n"
+
+# handle cleanup on exit (detach volume)
+function cleanup {
+    printf "\nDetaching $MOUNT_POINT...\n"
+    hdiutil detach "$MOUNT_POINT" || true
+    rm -f "$TMP_DMG"
+}
+trap cleanup EXIT
 
 # copy the app
+printf "Copying $APP_NAME.app to DMG...\n"
 cp -R "$APP_PATH" "$MOUNT_POINT/"
 
 # create a link to Applications
+printf "Creating Applications shortcut...\n"
 ln -s /Applications "$MOUNT_POINT/Applications"
 
-# TODO: Add custom styling (background, icon positioning) if hdiutil supports it easily via AppleScript
-# For now, this creates a functional, standard DMG.
-
-# detach
-hdiutil detach "$MOUNT_POINT"
-
 # convert to compressed read-only DMG
+printf "Converting to final DMG...\n"
 hdiutil convert "$TMP_DMG" -format UDZO -o "$DMG_NAME"
-
-# cleanup
-rm "$TMP_DMG"
 
 printf "\nDone! $DMG_NAME created.\n"
