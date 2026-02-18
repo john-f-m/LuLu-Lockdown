@@ -144,7 +144,6 @@
 
     .span-6 { grid-column: span 6; }
     .span-4 { grid-column: span 4; }
-    .span-8 { grid-column: span 8; }
 
     .k {
       margin: 0;
@@ -173,6 +172,13 @@
     .section h2 {
       margin: 0 0 14px;
       font-size: clamp(1.2rem, 3vw, 1.8rem);
+    }
+
+    .lede {
+      margin: 0 0 14px;
+      color: var(--ink-soft);
+      line-height: 1.6;
+      max-width: 84ch;
     }
 
     .feature-grid {
@@ -217,17 +223,264 @@
       color: #16365e;
     }
 
+    .insights-grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 8px 18px rgba(0, 24, 56, 0.07);
+      padding: 14px;
+    }
+
+    .panel h3 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .panel-note {
+      margin: 8px 0 0;
+      color: var(--ink-soft);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .map-panel { grid-column: span 8; }
+    .chart-panel { grid-column: span 4; display: grid; gap: 12px; align-content: start; }
+    .activity-panel { grid-column: span 12; }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .stat-pill {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.92);
+      padding: 10px;
+      font-family: "Chakra Petch", sans-serif;
+      color: #144267;
+      font-size: 0.92rem;
+    }
+
+    .stat-pill strong {
+      color: #0f5ec7;
+      font-size: 1.05rem;
+      margin-right: 6px;
+    }
+
+    .map-wrap {
+      margin-top: 12px;
+      border: 1px solid rgba(13, 61, 120, 0.18);
+      border-radius: 12px;
+      overflow: hidden;
+      background: linear-gradient(180deg, #e5f7ff, #eefbff 48%, #f7fcff);
+    }
+
+    #traffic-map {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .graticule line {
+      stroke: rgba(10, 53, 99, 0.16);
+      stroke-width: 1;
+    }
+
+    .land path {
+      fill: rgba(11, 104, 170, 0.22);
+      stroke: rgba(11, 81, 140, 0.35);
+      stroke-width: 1.2;
+    }
+
+    .map-link {
+      fill: none;
+      stroke: url(#linkGradient);
+      stroke-width: 2.1;
+      stroke-linecap: round;
+      stroke-dasharray: 8 8;
+      opacity: 0.84;
+      animation: linkFlow 10s linear infinite;
+    }
+
+    .map-dot {
+      fill: #ffffff;
+      stroke: #0864d2;
+      stroke-width: 2;
+    }
+
+    .map-dot.local {
+      fill: #ff7a00;
+      stroke: #cf5b00;
+      stroke-width: 2;
+    }
+
+    .legend {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.9);
+      padding: 6px 10px;
+      font-size: 0.82rem;
+      color: #1e4168;
+    }
+
+    .swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 99px;
+      display: inline-block;
+      border: 1px solid rgba(0,0,0,0.15);
+    }
+
+    .chart {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 88px 1fr 34px;
+      gap: 8px;
+      align-items: center;
+      font-size: 0.84rem;
+    }
+
+    .bar-label {
+      color: #20456f;
+      font-family: "Chakra Petch", sans-serif;
+      letter-spacing: 0.03em;
+    }
+
+    .bar-track {
+      width: 100%;
+      height: 11px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(20, 65, 110, 0.12);
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      min-width: 4px;
+    }
+
+    .bar-value {
+      text-align: right;
+      font-weight: 700;
+      color: #163e67;
+    }
+
+    .table-wrap {
+      margin-top: 12px;
+      overflow-x: auto;
+      border: 1px solid rgba(11, 23, 40, 0.12);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.92);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid rgba(11, 23, 40, 0.08);
+      font-size: 0.88rem;
+      white-space: nowrap;
+    }
+
+    th {
+      background: rgba(13, 100, 185, 0.1);
+      color: #0e3e6b;
+      font-family: "Chakra Petch", sans-serif;
+      letter-spacing: 0.04em;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+    }
+
+    td.host {
+      max-width: 180px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .decision-pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-weight: 700;
+      font-size: 0.74rem;
+      border: 1px solid transparent;
+    }
+
+    .decision-allow {
+      color: #095a2f;
+      background: rgba(9, 150, 80, 0.14);
+      border-color: rgba(9, 150, 80, 0.3);
+    }
+
+    .decision-block {
+      color: #8c1d1d;
+      background: rgba(226, 64, 64, 0.13);
+      border-color: rgba(226, 64, 64, 0.28);
+    }
+
+    .decision-pending {
+      color: #825400;
+      background: rgba(255, 173, 35, 0.16);
+      border-color: rgba(255, 173, 35, 0.35);
+    }
+
     footer {
       margin-top: 24px;
       font-size: 0.9rem;
       color: #4a5d7c;
     }
 
+    @keyframes linkFlow {
+      from { stroke-dashoffset: 0; }
+      to { stroke-dashoffset: -120; }
+    }
+
     @media (max-width: 900px) {
       .hero { padding: 26px; }
-      .span-6, .span-8, .span-4 { grid-column: span 12; }
+      .span-6, .span-4 { grid-column: span 12; }
       .feature-grid { grid-template-columns: 1fr; }
       .pulse { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .map-panel, .chart-panel, .activity-panel { grid-column: span 12; }
+      .bar-row { grid-template-columns: 72px 1fr 32px; }
+    }
+
+    @media (max-width: 560px) {
+      .stats-row { grid-template-columns: 1fr; }
+      .section { padding: 16px; }
+      .panel { padding: 12px; }
     }
   </style>
 </head>
@@ -238,7 +491,7 @@
       <div class="tag">LuLu-Lockdown • macOS Firewall Platform</div>
       <h1>Connection Control With Full Visibility</h1>
       <p class="sub">
-        LuLu-Lockdown combines LuLu’s app-aware firewall pipeline with Lockdown-inspired list workflows and telemetry.
+        LuLu-Lockdown combines LuLu's app-aware firewall pipeline with Lockdown-inspired list workflows and telemetry.
         You can run strict per-connection decisioning, queue in silent mode, and inspect where outbound traffic is going.
       </p>
       <div class="hero-actions">
@@ -299,9 +552,289 @@
       </div>
     </section>
 
+    <section class="section">
+      <h2>Traffic Insights Preview</h2>
+      <p class="lede">
+        This section demonstrates the Traffic Insights output: global outbound links, protocol and port distribution,
+        plus a recent-activity table with IP, port, protocol, and decision context.
+      </p>
+
+      <div class="stats-row" id="insight-stats"></div>
+
+      <div class="insights-grid">
+        <article class="panel map-panel">
+          <h3>Global Destination Links</h3>
+          <p class="panel-note">Animated arcs represent outbound connections from the local host to geolocated destination IPs.</p>
+          <div class="map-wrap">
+            <svg id="traffic-map" viewBox="0 0 980 460" role="img" aria-label="Global destination map with outbound connection links">
+              <defs>
+                <linearGradient id="linkGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#ff7a00" stop-opacity="0.92"></stop>
+                  <stop offset="50%" stop-color="#00c5c8" stop-opacity="0.9"></stop>
+                  <stop offset="100%" stop-color="#0077ff" stop-opacity="0.92"></stop>
+                </linearGradient>
+              </defs>
+
+              <rect x="0" y="0" width="980" height="460" fill="url(#bgOcean)"></rect>
+              <defs>
+                <linearGradient id="bgOcean" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#d8f3ff"></stop>
+                  <stop offset="100%" stop-color="#f3fbff"></stop>
+                </linearGradient>
+              </defs>
+
+              <g class="graticule">
+                <line x1="0" y1="77" x2="980" y2="77"></line>
+                <line x1="0" y1="154" x2="980" y2="154"></line>
+                <line x1="0" y1="230" x2="980" y2="230"></line>
+                <line x1="0" y1="306" x2="980" y2="306"></line>
+                <line x1="0" y1="383" x2="980" y2="383"></line>
+                <line x1="163" y1="0" x2="163" y2="460"></line>
+                <line x1="326" y1="0" x2="326" y2="460"></line>
+                <line x1="490" y1="0" x2="490" y2="460"></line>
+                <line x1="653" y1="0" x2="653" y2="460"></line>
+                <line x1="816" y1="0" x2="816" y2="460"></line>
+              </g>
+
+              <g class="land">
+                <path d="M82 138 L156 128 L229 132 L266 152 L247 184 L202 200 L180 227 L154 228 L118 210 L95 183 Z"></path>
+                <path d="M209 238 L246 244 L262 276 L256 330 L237 379 L216 367 L207 318 L196 270 Z"></path>
+                <path d="M432 124 L480 111 L557 116 L605 140 L646 144 L700 177 L714 210 L690 228 L621 219 L573 198 L520 188 L476 164 Z"></path>
+                <path d="M522 211 L552 219 L584 251 L572 285 L544 302 L525 278 L515 242 Z"></path>
+                <path d="M704 250 L736 241 L772 252 L810 286 L798 324 L770 345 L740 341 L716 316 L701 286 Z"></path>
+                <path d="M794 369 L838 357 L894 366 L922 386 L887 408 L826 406 Z"></path>
+              </g>
+
+              <g id="map-links"></g>
+              <g id="map-markers"></g>
+            </svg>
+          </div>
+          <div class="legend">
+            <span class="legend-item"><span class="swatch" style="background:#ff7a00"></span>Local host</span>
+            <span class="legend-item"><span class="swatch" style="background:#0077ff"></span>Destination markers</span>
+            <span class="legend-item"><span class="swatch" style="background:linear-gradient(90deg,#ff7a00,#00c5c8,#0077ff)"></span>Outbound traffic links</span>
+          </div>
+        </article>
+
+        <div class="chart-panel">
+          <article class="panel">
+            <h3>Protocol Distribution</h3>
+            <p class="panel-note">Connection volume by protocol family.</p>
+            <div class="chart" id="protocol-bars"></div>
+          </article>
+
+          <article class="panel">
+            <h3>Top Destination Ports</h3>
+            <p class="panel-note">Most frequent destination ports in observed traffic.</p>
+            <div class="chart" id="port-bars"></div>
+          </article>
+        </div>
+
+        <article class="panel activity-panel">
+          <h3>Recent Activity Table</h3>
+          <p class="panel-note">Each row includes app, endpoint, destination, protocol, port, and decision status.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Timestamp (UTC)</th>
+                  <th>App</th>
+                  <th>Host / Domain</th>
+                  <th>Destination IP</th>
+                  <th>Protocol</th>
+                  <th>Port</th>
+                  <th>Decision</th>
+                </tr>
+              </thead>
+              <tbody id="activity-rows"></tbody>
+            </table>
+          </div>
+        </article>
+      </div>
+    </section>
+
     <footer>
       LuLu-Lockdown • GitHub Pages source folder: <code>/docs</code>
     </footer>
   </main>
+
+  <script>
+    const localHost = {
+      app: "LuLu-Lockdown Host",
+      host: "local-machine",
+      ip: "127.0.0.1",
+      port: 0,
+      protocol: "LOCAL",
+      decision: "allow",
+      timestamp: "2026-02-18T16:20:00Z",
+      lat: 37.7749,
+      lon: -122.4194
+    };
+
+    const trafficEvents = [
+      { timestamp: "2026-02-18T16:19:36Z", app: "Safari", host: "cdn.apple.com", ip: "17.253.144.10", protocol: "HTTPS", port: 443, decision: "allow", lat: 37.3349, lon: -122.0090 },
+      { timestamp: "2026-02-18T16:19:24Z", app: "Slack", host: "edge.slack.com", ip: "3.231.98.22", protocol: "HTTPS", port: 443, decision: "allow", lat: 39.0458, lon: -77.4874 },
+      { timestamp: "2026-02-18T16:19:12Z", app: "Mail", host: "imap.mail.me.com", ip: "17.57.146.12", protocol: "TLS", port: 993, decision: "allow", lat: 53.3498, lon: -6.2603 },
+      { timestamp: "2026-02-18T16:18:57Z", app: "Discord", host: "gateway.discord.gg", ip: "162.159.136.232", protocol: "QUIC", port: 443, decision: "allow", lat: 51.5072, lon: -0.1276 },
+      { timestamp: "2026-02-18T16:18:49Z", app: "Chrome", host: "dns.google", ip: "8.8.8.8", protocol: "DNS", port: 53, decision: "allow", lat: 34.0522, lon: -118.2437 },
+      { timestamp: "2026-02-18T16:18:32Z", app: "Zoom", host: "zoom.us", ip: "170.114.52.2", protocol: "UDP", port: 3478, decision: "allow", lat: 35.6764, lon: 139.6500 },
+      { timestamp: "2026-02-18T16:18:15Z", app: "Spotify", host: "audio-fa.scdn.co", ip: "35.186.224.25", protocol: "HTTPS", port: 443, decision: "allow", lat: 1.3521, lon: 103.8198 },
+      { timestamp: "2026-02-18T16:17:50Z", app: "Xcode", host: "swift.org", ip: "151.101.130.217", protocol: "HTTPS", port: 443, decision: "allow", lat: 48.8566, lon: 2.3522 },
+      { timestamp: "2026-02-18T16:17:34Z", app: "Terminal", host: "archive.ubuntu.com", ip: "91.189.91.38", protocol: "HTTPS", port: 443, decision: "pending", lat: -33.8688, lon: 151.2093 },
+      { timestamp: "2026-02-18T16:17:03Z", app: "Unknown", host: "suspicious-node.example", ip: "185.203.116.44", protocol: "TCP", port: 8080, decision: "block", lat: 55.7558, lon: 37.6176 },
+      { timestamp: "2026-02-18T16:16:48Z", app: "Dropbox", host: "api.dropboxapi.com", ip: "162.125.66.14", protocol: "HTTPS", port: 443, decision: "allow", lat: 40.7128, lon: -74.0060 },
+      { timestamp: "2026-02-18T16:16:35Z", app: "system", host: "time.apple.com", ip: "17.253.2.125", protocol: "NTP", port: 123, decision: "allow", lat: 52.3676, lon: 4.9041 }
+    ];
+
+    const MAP_WIDTH = 980;
+    const MAP_HEIGHT = 460;
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function project(lat, lon) {
+      const x = ((lon + 180) / 360) * MAP_WIDTH;
+      const y = ((90 - lat) / 180) * MAP_HEIGHT;
+      return { x, y };
+    }
+
+    function buildArcPath(origin, destination) {
+      const midX = (origin.x + destination.x) / 2;
+      const midY = (origin.y + destination.y) / 2;
+      const distance = Math.hypot(destination.x - origin.x, destination.y - origin.y);
+      const curve = Math.max(45, Math.min(180, distance * 0.34));
+      return `M ${origin.x.toFixed(1)} ${origin.y.toFixed(1)} Q ${midX.toFixed(1)} ${(midY - curve).toFixed(1)} ${destination.x.toFixed(1)} ${destination.y.toFixed(1)}`;
+    }
+
+    function renderMapLinks() {
+      const origin = project(localHost.lat, localHost.lon);
+      const linksRoot = document.getElementById("map-links");
+      const markersRoot = document.getElementById("map-markers");
+
+      const linkMarkup = trafficEvents
+        .map((event) => {
+          const destination = project(event.lat, event.lon);
+          return `<path class="map-link" d="${buildArcPath(origin, destination)}"></path>`;
+        })
+        .join("");
+
+      const destinationDots = trafficEvents
+        .map((event) => {
+          const p = project(event.lat, event.lon);
+          return `<circle class="map-dot" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4.2"><title>${escapeHtml(event.host)} (${escapeHtml(event.ip)})</title></circle>`;
+        })
+        .join("");
+
+      const localDot = `<circle class="map-dot local" cx="${origin.x.toFixed(1)}" cy="${origin.y.toFixed(1)}" r="5.5"><title>Local host</title></circle>`;
+      linksRoot.innerHTML = linkMarkup;
+      markersRoot.innerHTML = localDot + destinationDots;
+    }
+
+    function aggregateCounts(events, key) {
+      const totals = {};
+      for (const event of events) {
+        const bucket = String(event[key]);
+        totals[bucket] = (totals[bucket] || 0) + 1;
+      }
+      return Object.entries(totals).sort((a, b) => b[1] - a[1]);
+    }
+
+    function renderBars(targetId, rows, colorFn) {
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      if (!rows.length) {
+        target.innerHTML = '<p class="panel-note">No traffic sampled.</p>';
+        return;
+      }
+
+      const max = rows[0][1];
+      target.innerHTML = rows
+        .map(([label, value]) => {
+          const width = (value / max) * 100;
+          const color = colorFn(label);
+          return `
+            <div class="bar-row">
+              <div class="bar-label">${escapeHtml(label)}</div>
+              <div class="bar-track"><div class="bar-fill" style="width:${width.toFixed(1)}%; background:${color};"></div></div>
+              <div class="bar-value">${value}</div>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    function renderStats() {
+      const stats = document.getElementById("insight-stats");
+      const blocked = trafficEvents.filter((item) => item.decision === "block").length;
+      const pending = trafficEvents.filter((item) => item.decision === "pending").length;
+      const protocols = new Set(trafficEvents.map((item) => item.protocol)).size;
+      const destinations = new Set(trafficEvents.map((item) => item.ip)).size;
+
+      stats.innerHTML = [
+        `<div class="stat-pill"><strong>${trafficEvents.length}</strong>events sampled</div>`,
+        `<div class="stat-pill"><strong>${destinations}</strong>destination IPs</div>`,
+        `<div class="stat-pill"><strong>${protocols}</strong>protocols observed</div>`,
+        `<div class="stat-pill"><strong>${blocked + pending}</strong>block/pending decisions</div>`
+      ].join("");
+    }
+
+    function renderActivityTable() {
+      const body = document.getElementById("activity-rows");
+      const rows = trafficEvents
+        .slice()
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .map((event) => {
+          const time = event.timestamp.replace("T", " ").replace("Z", "");
+          const decisionClass = `decision-${event.decision}`;
+          return `
+            <tr>
+              <td>${escapeHtml(time)}</td>
+              <td>${escapeHtml(event.app)}</td>
+              <td class="host" title="${escapeHtml(event.host)}">${escapeHtml(event.host)}</td>
+              <td>${escapeHtml(event.ip)}</td>
+              <td>${escapeHtml(event.protocol)}</td>
+              <td>${event.port}</td>
+              <td><span class="decision-pill ${decisionClass}">${escapeHtml(event.decision.toUpperCase())}</span></td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      body.innerHTML = rows;
+    }
+
+    function protocolColor(protocol) {
+      const palette = {
+        HTTPS: "linear-gradient(90deg,#0077ff,#00c5c8)",
+        TLS: "linear-gradient(90deg,#0b93ff,#45d2ff)",
+        DNS: "linear-gradient(90deg,#16a34a,#22c55e)",
+        QUIC: "linear-gradient(90deg,#4f46e5,#6366f1)",
+        UDP: "linear-gradient(90deg,#f59e0b,#fbbf24)",
+        TCP: "linear-gradient(90deg,#ef4444,#fb7185)",
+        NTP: "linear-gradient(90deg,#6b7280,#9ca3af)"
+      };
+      return palette[protocol] || "linear-gradient(90deg,#1f6fc7,#4ba0ff)";
+    }
+
+    function portColor() {
+      return "linear-gradient(90deg,#ff7a00,#ffb300)";
+    }
+
+    function initInsightsPreview() {
+      renderMapLinks();
+      renderStats();
+      renderBars("protocol-bars", aggregateCounts(trafficEvents, "protocol"), protocolColor);
+      renderBars("port-bars", aggregateCounts(trafficEvents, "port"), portColor);
+      renderActivityTable();
+    }
+
+    initInsightsPreview();
+  </script>
 </body>
 </html>
