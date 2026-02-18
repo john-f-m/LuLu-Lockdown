@@ -117,6 +117,18 @@ This will generate a `LuLu_<version>.dmg` in the root directory.
 ### Post-Build Actions
 - Approve required system/network extension permissions on macOS when running the app for the first time.
 
+### Testing without a Developer Account
+If you do not have a paid Apple Developer account, you will encounter an **"activation failed"** error when launching your local build. This is because macOS requires a valid **Network Extension entitlement** (granted only to paid developers) to activate a system extension.
+
+To test your local build without a paid account, you must lower the system's security:
+
+1. **Disable SIP**: Boot into Recovery Mode and run `csrutil disable`.
+2. **Enable Developer Mode**: Run `systemextensionsctl developer on` in the terminal.
+3. **App Location**: Ensure the app is running from `/Applications`.
+
+> [!WARNING]
+> Disabling SIP reduces the security of your Mac. This should only be done on a dedicated test machine or if you are fully aware of the implications.
+
 ## Notes
 
 - This project currently targets macOS and uses the existing LuLu app/extension architecture.
