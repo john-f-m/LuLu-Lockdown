@@ -195,7 +195,7 @@ extern XPCDaemonClient *xpcDaemonClient;
   self.metaBlockButton.title =
       NSLocalizedString(@"Block Meta (Facebook, Instagram, WhatsApp)",
                         @"Block Meta (Facebook, Instagram, WhatsApp)");
-  self.metaBlockButton.setButtonType(NSButtonTypeSwitch);
+  [self.metaBlockButton setButtonType:NSButtonTypeSwitch];
   self.metaBlockButton.target = self;
   self.metaBlockButton.tag = BUTTON_META_BLOCK;
   self.metaBlockButton.action = @selector(togglePreference:);
@@ -207,7 +207,7 @@ extern XPCDaemonClient *xpcDaemonClient;
                                24)];
   self.xBlockButton.title =
       NSLocalizedString(@"Block X (Twitter)", @"Block X (Twitter)");
-  self.xBlockButton.setButtonType(NSButtonTypeSwitch);
+  [self.xBlockButton setButtonType:NSButtonTypeSwitch];
   self.xBlockButton.target = self;
   self.xBlockButton.tag = BUTTON_X_BLOCK;
   self.xBlockButton.action = @selector(togglePreference:);

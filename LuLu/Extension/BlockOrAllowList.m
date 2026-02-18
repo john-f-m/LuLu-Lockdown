@@ -235,6 +235,57 @@ bail:
                (unsigned long)self.ipPrefixes.count);
 }
 
+// helper: check if an IP address falls within a CIDR prefix
+- (BOOL)address:(NSString *)address matchesPrefix:(NSString *)cidr {
+  // split CIDR into address and prefix length
+  NSArray *parts = [cidr componentsSeparatedByString:@"/"];
+  if (2 != parts.count)
+    return NO;
+
+  NSString *cidrAddr = parts[0];
+  int prefixLen = [parts[1] intValue];
+
+  // try IPv4
+  struct in_addr addr4, cidr4;
+  if (1 == inet_pton(AF_INET, address.UTF8String, &addr4) &&
+      1 == inet_pton(AF_INET, cidrAddr.UTF8String, &cidr4)) {
+    if (prefixLen < 0 || prefixLen > 32)
+      return NO;
+
+    uint32_t mask =
+        (prefixLen == 0) ? 0 : htonl(0xFFFFFFFF << (32 - prefixLen));
+    return (addr4.s_addr & mask) == (cidr4.s_addr & mask);
+  }
+
+  // try IPv6
+  struct in6_addr addr6, cidr6;
+  if (1 == inet_pton(AF_INET6, address.UTF8String, &addr6) &&
+      1 == inet_pton(AF_INET6, cidrAddr.UTF8String, &cidr6)) {
+    if (prefixLen < 0 || prefixLen > 128)
+      return NO;
+
+    // compare byte by byte
+    int fullBytes = prefixLen / 8;
+    int remainingBits = prefixLen % 8;
+
+    // compare full bytes
+    if (fullBytes > 0 && 0 != memcmp(&addr6, &cidr6, fullBytes))
+      return NO;
+
+    // compare remaining bits
+    if (remainingBits > 0) {
+      uint8_t mask = (uint8_t)(0xFF << (8 - remainingBits));
+      if ((addr6.s6_addr[fullBytes] & mask) !=
+          (cidr6.s6_addr[fullBytes] & mask))
+        return NO;
+    }
+
+    return YES;
+  }
+
+  return NO;
+}
+
 // check if flow matches item on block or allow list
 //  note: currently lists don't support port matching
 - (BOOL)isMatch:(NEFilterSocketFlow *)flow {

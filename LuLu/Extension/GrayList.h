@@ -10,16 +10,17 @@
 @import OSLog;
 @import Foundation;
 
+@class Process;
 
 @interface GrayList : NSObject
 
 /* PROPERTIES */
 
-//gray listed (apple) binaries
-@property(nonatomic, retain)NSMutableSet* graylistedBinaries;
+// gray listed (apple) binaries
+@property(nonatomic, retain) NSMutableSet *graylistedBinaries;
 
 /* METHODS */
-//determine if process is graylisted
--(BOOL)isGrayListed:(Process*)process;
+// determine if process is graylisted
+- (BOOL)isGrayListed:(Process *)process;
 
 @end
