@@ -36,10 +36,12 @@ fi
 
 printf "Mounted at: $MOUNT_POINT\n"
 
-# handle cleanup on exit (detach volume)
+# handle cleanup on exit (in case of error before manual detach)
 function cleanup {
-    printf "\nDetaching $MOUNT_POINT...\n"
-    hdiutil detach "$MOUNT_POINT" || true
+    if [ -d "$MOUNT_POINT" ]; then
+        printf "\nCleaning up: Detaching $MOUNT_POINT...\n"
+        hdiutil detach "$MOUNT_POINT" || true
+    fi
     rm -f "$TMP_DMG"
 }
 trap cleanup EXIT
@@ -52,8 +54,21 @@ cp -R "$APP_PATH" "$MOUNT_POINT/"
 printf "Creating Applications shortcut...\n"
 ln -s /Applications "$MOUNT_POINT/Applications"
 
+# sync to ensure all data is written
+sync
+
+# detach BEFORE conversion (convert fails if mounted)
+printf "Detaching volume before conversion...\n"
+hdiutil detach "$MOUNT_POINT"
+
 # convert to compressed read-only DMG
 printf "Converting to final DMG...\n"
 hdiutil convert "$TMP_DMG" -format UDZO -o "$DMG_NAME"
+
+# remove trap to avoid double cleaning or errors
+trap - EXIT
+
+# final cleanup
+rm -f "$TMP_DMG"
 
 printf "\nDone! $DMG_NAME created.\n"
