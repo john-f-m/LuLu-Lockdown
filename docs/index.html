@@ -1,13 +1,17 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>LuLu-Lockdown</title>
-  <meta name="description" content="LuLu-Lockdown: a combined macOS firewall platform with strict/silent decision modes, telemetry, map-based traffic insights, and Lockdown-style bad actor imports." />
+  <meta name="description"
+    content="LuLu-Lockdown: a combined macOS firewall platform with strict/silent decision modes, telemetry, map-based traffic insights, and Lockdown-style bad actor imports." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Chakra+Petch:wght@500;700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Chakra+Petch:wght@500;700&display=swap"
+    rel="stylesheet" />
   <style>
     :root {
       --ink: #0b1728;
@@ -24,7 +28,9 @@
       --shadow: 0 18px 40px rgba(0, 31, 72, 0.12);
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -48,7 +54,7 @@
       position: relative;
       overflow: hidden;
       border: 1px solid var(--line);
-      background: linear-gradient(150deg, rgba(255,255,255,0.92), rgba(241,250,255,0.88));
+      background: linear-gradient(150deg, rgba(255, 255, 255, 0.92), rgba(241, 250, 255, 0.88));
       border-radius: 24px;
       box-shadow: var(--shadow);
       padding: 44px;
@@ -58,7 +64,7 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      background-image: radial-gradient(rgba(11,23,40,0.08) 0.65px, transparent 0.65px);
+      background-image: radial-gradient(rgba(11, 23, 40, 0.08) 0.65px, transparent 0.65px);
       background-size: 8px 8px;
       mix-blend-mode: soft-light;
       opacity: 0.35;
@@ -113,7 +119,9 @@
       transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
     }
 
-    .btn:hover { transform: translateY(-1px); }
+    .btn:hover {
+      transform: translateY(-1px);
+    }
 
     .btn-main {
       color: #fff;
@@ -142,8 +150,13 @@
       padding: 18px;
     }
 
-    .span-6 { grid-column: span 6; }
-    .span-4 { grid-column: span 4; }
+    .span-6 {
+      grid-column: span 6;
+    }
+
+    .span-4 {
+      grid-column: span 4;
+    }
 
     .k {
       margin: 0;
@@ -191,7 +204,7 @@
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 14px;
-      background: rgba(255,255,255,0.84);
+      background: rgba(255, 255, 255, 0.84);
     }
 
     .feature h3 {
@@ -209,14 +222,14 @@
     .pulse {
       margin-top: 16px;
       display: grid;
-      grid-template-columns: repeat(3, minmax(0,1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
     }
 
     .pulse .dot {
       border: 1px solid var(--line);
       border-radius: 12px;
-      background: rgba(255,255,255,0.9);
+      background: rgba(255, 255, 255, 0.9);
       padding: 10px;
       font-family: "Chakra Petch", sans-serif;
       font-size: 0.9rem;
@@ -250,9 +263,20 @@
       line-height: 1.5;
     }
 
-    .map-panel { grid-column: span 8; }
-    .chart-panel { grid-column: span 4; display: grid; gap: 12px; align-content: start; }
-    .activity-panel { grid-column: span 12; }
+    .map-panel {
+      grid-column: span 8;
+    }
+
+    .chart-panel {
+      grid-column: span 4;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .activity-panel {
+      grid-column: span 12;
+    }
 
     .stats-row {
       display: grid;
@@ -264,7 +288,7 @@
     .stat-pill {
       border: 1px solid var(--line);
       border-radius: 12px;
-      background: rgba(255,255,255,0.92);
+      background: rgba(255, 255, 255, 0.92);
       padding: 10px;
       font-family: "Chakra Petch", sans-serif;
       color: #144267;
@@ -337,7 +361,7 @@
       gap: 7px;
       border: 1px solid var(--line);
       border-radius: 999px;
-      background: rgba(255,255,255,0.9);
+      background: rgba(255, 255, 255, 0.9);
       padding: 6px 10px;
       font-size: 0.82rem;
       color: #1e4168;
@@ -348,7 +372,7 @@
       height: 10px;
       border-radius: 99px;
       display: inline-block;
-      border: 1px solid rgba(0,0,0,0.15);
+      border: 1px solid rgba(0, 0, 0, 0.15);
     }
 
     .chart {
@@ -396,7 +420,7 @@
       overflow-x: auto;
       border: 1px solid rgba(11, 23, 40, 0.12);
       border-radius: 10px;
-      background: rgba(255,255,255,0.92);
+      background: rgba(255, 255, 255, 0.92);
     }
 
     table {
@@ -405,7 +429,8 @@
       min-width: 760px;
     }
 
-    th, td {
+    th,
+    td {
       padding: 10px 12px;
       text-align: left;
       border-bottom: 1px solid rgba(11, 23, 40, 0.08);
@@ -463,27 +488,64 @@
     }
 
     @keyframes linkFlow {
-      from { stroke-dashoffset: 0; }
-      to { stroke-dashoffset: -120; }
+      from {
+        stroke-dashoffset: 0;
+      }
+
+      to {
+        stroke-dashoffset: -120;
+      }
     }
 
     @media (max-width: 900px) {
-      .hero { padding: 26px; }
-      .span-6, .span-4 { grid-column: span 12; }
-      .feature-grid { grid-template-columns: 1fr; }
-      .pulse { grid-template-columns: 1fr; }
-      .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .map-panel, .chart-panel, .activity-panel { grid-column: span 12; }
-      .bar-row { grid-template-columns: 72px 1fr 32px; }
+      .hero {
+        padding: 26px;
+      }
+
+      .span-6,
+      .span-4 {
+        grid-column: span 12;
+      }
+
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .pulse {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .map-panel,
+      .chart-panel,
+      .activity-panel {
+        grid-column: span 12;
+      }
+
+      .bar-row {
+        grid-template-columns: 72px 1fr 32px;
+      }
     }
 
     @media (max-width: 560px) {
-      .stats-row { grid-template-columns: 1fr; }
-      .section { padding: 16px; }
-      .panel { padding: 12px; }
+      .stats-row {
+        grid-template-columns: 1fr;
+      }
+
+      .section {
+        padding: 16px;
+      }
+
+      .panel {
+        padding: 12px;
+      }
     }
   </style>
 </head>
+
 <body>
   <main class="frame">
     <section class="hero">
@@ -492,7 +554,8 @@
       <h1>Connection Control With Full Visibility</h1>
       <p class="sub">
         LuLu-Lockdown combines LuLu's app-aware firewall pipeline with Lockdown-inspired list workflows and telemetry.
-        You can run strict per-connection decisioning, queue in silent mode, and inspect where outbound traffic is going.
+        You can run strict per-connection decisioning, queue in silent mode, and inspect where outbound traffic is
+        going.
       </p>
       <div class="hero-actions">
         <a class="btn btn-main" href="https://github.com/john-f-m/LuLu-Lockdown#readme">Read Full README</a>
@@ -545,7 +608,8 @@
         </article>
         <article class="feature">
           <h3>Social Media Block</h3>
-          <p>Block Meta (FB, Instagram, WhatsApp) domains and IPs with CIDR support. More platforms coming soon.</p>
+          <p>Block Meta (FB, Instagram, WhatsApp) and X (Twitter) domains and IPs with CIDR support. ASN-based update
+            scripts included.</p>
         </article>
       </div>
 
@@ -568,9 +632,11 @@
       <div class="insights-grid">
         <article class="panel map-panel">
           <h3>Global Destination Links</h3>
-          <p class="panel-note">Animated arcs represent outbound connections from the local host to geolocated destination IPs.</p>
+          <p class="panel-note">Animated arcs represent outbound connections from the local host to geolocated
+            destination IPs.</p>
           <div class="map-wrap">
-            <svg id="traffic-map" viewBox="0 0 980 460" role="img" aria-label="Global destination map with outbound connection links">
+            <svg id="traffic-map" viewBox="0 0 980 460" role="img"
+              aria-label="Global destination map with outbound connection links">
               <defs>
                 <linearGradient id="linkGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stop-color="#ff7a00" stop-opacity="0.92"></stop>
@@ -601,9 +667,12 @@
               </g>
 
               <g class="land">
-                <path d="M82 138 L156 128 L229 132 L266 152 L247 184 L202 200 L180 227 L154 228 L118 210 L95 183 Z"></path>
+                <path d="M82 138 L156 128 L229 132 L266 152 L247 184 L202 200 L180 227 L154 228 L118 210 L95 183 Z">
+                </path>
                 <path d="M209 238 L246 244 L262 276 L256 330 L237 379 L216 367 L207 318 L196 270 Z"></path>
-                <path d="M432 124 L480 111 L557 116 L605 140 L646 144 L700 177 L714 210 L690 228 L621 219 L573 198 L520 188 L476 164 Z"></path>
+                <path
+                  d="M432 124 L480 111 L557 116 L605 140 L646 144 L700 177 L714 210 L690 228 L621 219 L573 198 L520 188 L476 164 Z">
+                </path>
                 <path d="M522 211 L552 219 L584 251 L572 285 L544 302 L525 278 L515 242 Z"></path>
                 <path d="M704 250 L736 241 L772 252 L810 286 L798 324 L770 345 L740 341 L716 316 L701 286 Z"></path>
                 <path d="M794 369 L838 357 L894 366 L922 386 L887 408 L826 406 Z"></path>
@@ -616,7 +685,8 @@
           <div class="legend">
             <span class="legend-item"><span class="swatch" style="background:#ff7a00"></span>Local host</span>
             <span class="legend-item"><span class="swatch" style="background:#0077ff"></span>Destination markers</span>
-            <span class="legend-item"><span class="swatch" style="background:linear-gradient(90deg,#ff7a00,#00c5c8,#0077ff)"></span>Outbound traffic links</span>
+            <span class="legend-item"><span class="swatch"
+                style="background:linear-gradient(90deg,#ff7a00,#00c5c8,#0077ff)"></span>Outbound traffic links</span>
           </div>
         </article>
 
@@ -841,4 +911,5 @@
     initInsightsPreview();
   </script>
 </body>
+
 </html>

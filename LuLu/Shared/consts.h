@@ -10,295 +10,299 @@
 #ifndef consts_h
 #define consts_h
 
-//signers
-enum Signer{None, Apple, AppStore, DevID, AdHoc};
+// signers
+enum Signer { None, Apple, AppStore, DevID, AdHoc };
 
-//project home url
+// project home url
 #define PATREON_URL @"https://github.com/john-f-m/LuLu-Lockdown"
 
-//vendor id string
+// vendor id string
 #define OBJECTIVE_SEE_VENDOR "com.objectiveSee"
 
-//bundle ID
+// bundle ID
 #define BUNDLE_ID "com.objective-see.lulu"
 
-//extension bundle ID
+// extension bundle ID
 #define EXT_BUNDLE_ID @"com.objective-see.lulu.extension"
 
-//main app bundle id
+// main app bundle id
 #define APP_ID @"com.objective-see.lulu.app"
 
-//signing auth
-#define SIGNING_AUTH @"Developer ID Application: Objective-See, LLC (VBG97UB4TA)"
+// signing auth
+#define SIGNING_AUTH                                                           \
+  @"Developer ID Application: Objective-See, LLC (VBG97UB4TA)"
 
-//firewall event: new flow
+// firewall event: new flow
 #define LULU_EVENT @"com.objective-see.lulu.event"
 
-//lulu service
+// lulu service
 #define LULU_SERVICE_NAME "com_objective_see_firewall"
 
-//install directory
+// install directory
 #define INSTALL_DIRECTORY @"/Library/Objective-See/LuLu"
 
-//preferences file
+// preferences file
 #define PREFS_FILE @"preferences.plist"
 
-//rules file
+// rules file
 #define RULES_FILE @"rules.plist"
 
 //(old) rules file
 #define RULES_FILE_V1 @"rules_v1.plist"
 
-//connections telemetry file
+// connections telemetry file
 #define CONNECTIONS_FILE @"connections.plist"
 
-//pending connections file
+// pending connections file
 #define PENDING_CONNECTIONS_FILE @"pendingConnections.plist"
 
-//client no status
+// client no status
 #define STATUS_CLIENT_UNKNOWN -1
 
-//client disabled
+// client disabled
 #define STATUS_CLIENT_DISABLED 0
 
-//client enabled
+// client enabled
 #define STATUS_CLIENT_ENABLED 1
 
-//daemon mach name
+// daemon mach name
 #define DAEMON_MACH_SERVICE @"VBG97UB4TA.com.objective-see.lulu"
 
-//rule state; not found
+// rule state; not found
 #define RULE_STATE_NOT_FOUND -1
 
-//rule state; block
+// rule state; block
 #define RULE_STATE_BLOCK 0
 
-//rule state; allow
+// rule state; allow
 #define RULE_STATE_ALLOW 1
 
-//product version url
+// product version url
 #define PRODUCT_VERSIONS_URL @"https://objective-see.org/products.json"
 
-//app name
+// app name
 #define PRODUCT_NAME @"LuLu-Lockdown"
 
-//product url
+// product url
 #define PRODUCT_URL @"https://github.com/john-f-m/LuLu-Lockdown"
 
-//error(s) url
+// error(s) url
 #define ERRORS_URL @"https://objective-see.org/errors.html"
 
-//support us button tag
+// support us button tag
 #define BUTTON_SUPPORT_US 100
 
-//more info button tag
+// more info button tag
 #define BUTTON_MORE_INFO 101
 
-//install cmd
+// install cmd
 #define CMD_INSTALL @"-install"
 
-//uninstall cmd
+// uninstall cmd
 #define CMD_UNINSTALL @"-uninstall"
 
-//flag to uninstall
+// flag to uninstall
 #define ACTION_UNINSTALL_FLAG 0
 
-//flag to install
+// flag to install
 #define ACTION_INSTALL_FLAG 1
 
-//flag for partial uninstall
-// leave preferences file, etc.
+// flag for partial uninstall
+//  leave preferences file, etc.
 #define UNINSTALL_PARTIAL 0
 
-//flag for full uninstall
+// flag for full uninstall
 #define UNINSTALL_FULL 1
 
-//add rule, block
+// add rule, block
 #define BUTTON_BLOCK 0
 
-//add rule, allow
+// add rule, allow
 #define BUTTON_ALLOW 1
 
-//login item name
+// login item name
 #define LOGIN_ITEM_NAME @"LuLu Helper"
 
-//prefs
-// disabled status
+// prefs
+//  disabled status
 #define PREF_IS_DISABLED @"disabled"
 
-//prefs
-// passive mode, & rules/action
+// prefs
+//  passive mode, & rules/action
 #define PREF_PASSIVE_MODE @"passiveMode"
 #define PREF_PASSIVE_MODE_RULES @"passiveModeRules"
 #define PREF_PASSIVE_MODE_ACTION @"passiveModeAction"
 
-//prefs
-// strict/silent connection handling modes
+// prefs
+//  strict/silent connection handling modes
 #define PREF_STRICT_MODE @"strictMode"
 #define PREF_SILENT_MODE @"silentMode"
 
-//index of allow/block in passive mode action
+// index of allow/block in passive mode action
 #define PREF_PASSIVE_MODE_ALLOW 0
 #define PREF_PASSIVE_MODE_BLOCK 1
 
-//index of no/yes in passive mode action
+// index of no/yes in passive mode action
 #define PREF_PASSIVE_MODE_RULES_NO 0
 #define PREF_PASSIVE_MODE_RULES_YES 1
 
-//prefs
-// block mode
+// prefs
+//  block mode
 #define PREF_BLOCK_MODE @"blockMode"
 
-//prefs
-// icon mode
+// prefs
+//  icon mode
 #define PREF_NO_ICON_MODE @"noIconMode"
 
-//prefs
-// no VT mode
+// prefs
+//  no VT mode
 #define PREF_NO_VT_MODE @"noVTMode"
 
-//prefs
-// update mode
+// prefs
+//  update mode
 #define PREF_NO_UPDATE_MODE @"noupdateMode"
 
-//prefs
-// allow all apple binaries
+// prefs
+//  allow all apple binaries
 #define PREF_ALLOW_APPLE @"allowApple"
 
-//prefs
-// allow all installed
+// prefs
+//  allow all installed
 #define PREF_ALLOW_INSTALLED @"allowInstalled"
 
-//prefs
-// allow dns traffic
+// prefs
+//  allow dns traffic
 #define PREF_ALLOW_DNS @"allowDNS"
 
-//prefs
-// allow simulator apps
+// prefs
+//  allow simulator apps
 #define PREF_ALLOW_SIMULATOR @"allowSimulatorApps"
 
-//use global block list
+// use global block list
 #define PREF_USE_BLOCK_LIST @"useBlockList"
 
-//use global allow list
+// use global allow list
 #define PREF_USE_ALLOW_LIST @"useAllowList"
 
-//global allow list
+// global allow list
 #define PREF_ALLOW_LIST @"allowList"
 
-//global block list
+// global block list
 #define PREF_BLOCK_LIST @"blockList"
 
-//meta block
+// meta block
 #define PREF_META_BLOCK @"metaBlock"
 
-//prefs
-// current profile
+// x block
+#define PREF_X_BLOCK @"xBlock"
+
+// prefs
+//  current profile
 #define PREF_CURRENT_PROFILE @"currentProfile"
 
-//install time
-// not really a 'pref' but need to save it
+// install time
+//  not really a 'pref' but need to save it
 #define PREF_INSTALL_TIMESTAMP @"installTime"
 
-//show alert options
-// not really a 'pref' but need to save it
+// show alert options
+//  not really a 'pref' but need to save it
 #define PREF_ALERT_SHOW_OPTIONS @"alertShowOptions"
 
-//rule scope
-// not really a 'pref' but need to save it
+// rule scope
+//  not really a 'pref' but need to save it
 #define PREF_ALERT_LAST_RULE_SCOPE @"alertLastRuleScope"
 
-//rule duration
-// not really a 'pref' but need to save it
+// rule duration
+//  not really a 'pref' but need to save it
 #define PREF_ALERT_LAST_RULE_DURATION @"alertLastRuleDuration"
 
-//rule duration buttons
+// rule duration buttons
 #define RULE_DURATION_BUTTON_ALWAYS 100
 #define RULE_DURATION_BUTTON_PROCESS 101
 #define RULE_DURATION_BUTTON_CUSTOM 102
 
-//rule menu button
+// rule menu button
 #define RULE_ROW_MENU_BUTTON 110
 
-//log file
+// log file
 #define LOG_FILE_NAME @"LuLu.log"
 
-//error URL
+// error URL
 #define KEY_ERROR_URL @"errorURL"
 
-//flag for error popup
+// flag for error popup
 #define KEY_ERROR_SHOULD_EXIT @"shouldExit"
 
-//general error URL
+// general error URL
 #define FATAL_ERROR_URL @"https://objective-see.com/errors.html"
 
-//key for exit code
+// key for exit code
 #define EXIT_CODE @"exitCode"
 
-//key for error msg
+// key for error msg
 #define KEY_ERROR_MSG @"errorMsg"
 
-//key for error sub msg
+// key for error sub msg
 #define KEY_ERROR_SUB_MSG @"errorSubMsg"
 
-//rules changed
+// rules changed
 #define RULES_CHANGED @"com.objective-see.lulu.rulesChanged"
 
-//extension event
+// extension event
 #define EXTENSION_EVENT @"com.objective-see.lulu.extensionEvent"
 
 /* INSTALLER */
 
-//install directory
+// install directory
 #define INSTALL_DIRECTORY @"/Library/Objective-See/LuLu"
 
-//launch daemon name
+// launch daemon name
 #define LAUNCH_DAEMON_BINARY @"LuLu"
 
-//launch daemon plist
+// launch daemon plist
 #define LAUNCH_DAEMON_PLIST @"com.objective-see.lulu.plist"
 
-//installed apps file
+// installed apps file
 #define INSTALLED_APPS @"installedApps"
 
-//frame shift
-// for status msg to avoid activity indicator
+// frame shift
+//  for status msg to avoid activity indicator
 #define FRAME_SHIFT 45
 
-//button title: restart
+// button title: restart
 #define ACTION_RESTART @"Restart"
 
-//flag to reboot
+// flag to reboot
 #define ACTION_RESTART_FLAG -1
 
-//cmdline flag to uninstall
+// cmdline flag to uninstall
 #define ACTION_UNINSTALL @"-uninstall"
 
-//flag to uninstall
+// flag to uninstall
 #define ACTION_UNINSTALL_FLAG 0
 
-//cmdline flag to uninstall
+// cmdline flag to uninstall
 #define ACTION_INSTALL @"-install"
 
-//flag to install
+// flag to install
 #define ACTION_INSTALL_FLAG 1
 
-//button title: upgrade
+// button title: upgrade
 #define ACTION_UPGRADE @"Upgrade"
 
-//button title: close
+// button title: close
 #define ACTION_CLOSE @"Close"
 
-//flag to close
+// flag to close
 #define ACTION_CLOSE_FLAG 2
 
-//button title: next
+// button title: next
 #define ACTION_NEXT @"Next »"
 
-//next
+// next
 #define ACTION_NEXT_FLAG 3
 
-//app name
+// app name
 #define APP_NAME @"LuLu.app"
 
 #define CMDLINE_FLAG_WELCOME @"-welcome"
@@ -357,7 +361,7 @@ enum Signer{None, Apple, AppStore, DevID, AdHoc};
 
 #define VALUE_ANY @"*"
 
-//keys for rule dictionary
+// keys for rule dictionary
 #define RULE_ID @"id"
 #define RULE_PATH @"path"
 #define RULE_HASH @"hash"
@@ -366,94 +370,99 @@ enum Signer{None, Apple, AppStore, DevID, AdHoc};
 #define RULE_ACTION @"action"
 #define RULE_SIGNING_INFO @"signingInfo"
 
-//rules types
-#define RULE_TYPE_ALL     -1
-#define RULE_TYPE_DEFAULT  0
-#define RULE_TYPE_APPLE    1
+// rules types
+#define RULE_TYPE_ALL -1
+#define RULE_TYPE_DEFAULT 0
+#define RULE_TYPE_APPLE 1
 #define RULE_TYPE_BASELINE 2
-#define RULE_TYPE_USER     3
-#define RULE_TYPE_PASSIVE  4
-#define RULE_TYPE_RECENT   5
+#define RULE_TYPE_USER 3
+#define RULE_TYPE_PASSIVE 4
+#define RULE_TYPE_RECENT 5
 
-//rule toggle states
+// rule toggle states
 #define RULE_TOGGLE_STATE_ENABLE 1
 #define RULE_TOGGLE_STATE_DISABLE 0
 
-//search (filter) field
+// search (filter) field
 #define RULE_SEARCH_FIELD 5
 
-//network monitor
+// network monitor
 #define NETWORK_MONITOR @"Netiquette.app"
 
-//scope for action
-// from dropdown in alert window
+// scope for action
+//  from dropdown in alert window
 #define ACTION_SCOPE_UNSELECTED -1
 #define ACTION_SCOPE_PROCESS 0
 #define ACTION_SCOPE_ENDPOINT 1
 
-//signing info (from ES)
+// signing info (from ES)
 #define CS_FLAGS @"csFlags"
 #define PLATFORM_BINARY @"platformBinary"
 #define TEAM_ID @"teamID"
 #define SIGNING_ID @"signingID"
 
-//rules window
+// rules window
 #define WINDOW_RULES 0
 
-//preferences window
+// preferences window
 #define WINDOW_PREFERENCES 1
 
-//key for stdout output
+// key for stdout output
 #define STDOUT @"stdOutput"
 
-//key for stderr output
+// key for stderr output
 #define STDERR @"stdError"
 
-//key for exit code
+// key for exit code
 #define EXIT_CODE @"exitCode"
 
 /* MAIN APP */
 
-//1st welcome view
+// 1st welcome view
 #define WELCOME_VIEW_ONE 1
 
-//2nd welcome view
+// 2nd welcome view
 #define WELCOME_VIEW_TWO 2
 
-//3rd welcome view
+// 3rd welcome view
 #define WELCOME_VIEW_THREE 3
 
-//cs consts
-// from: cs_blobs.h
+// cs consts
+//  from: cs_blobs.h
 #define CS_VALID 0x00000001
 #define CS_RUNTIME 0x00010000
 
-//deactivate
+// deactivate
 #define ACTION_DEACTIVATE 0
 
-//activate
+// activate
 #define ACTION_ACTIVATE 1
 
-//rules menu
-#define MENU_RULES_VIEW    1
-#define MENU_RULES_ADD     2
-#define MENU_RULES_IMPORT  3
-#define MENU_RULES_EXPORT  4
+// rules menu
+#define MENU_RULES_VIEW 1
+#define MENU_RULES_ADD 2
+#define MENU_RULES_IMPORT 3
+#define MENU_RULES_EXPORT 4
 #define MENU_RULES_CLEANUP 5
 
-//os major
+// os major
 #define SUPPORTED_OS_MAJOR @"OSMajor"
 
-//os minor
+// os minor
 #define SUPPORTED_OS_MINOR @"OSMinor"
 
-//latest version
+// latest version
 #define LATEST_VERSION @"version"
 
-//updates
-typedef enum {Update_Error, Update_None, Update_NotSupported, Update_Available} UpdateStatus;
+// updates
+typedef enum {
+  Update_Error,
+  Update_None,
+  Update_NotSupported,
+  Update_Available
+} UpdateStatus;
 
-//profiles directory
+// profiles directory
 #define PROFILE_DIRECTORY @"Profiles"
 
 #endif /* const_h */

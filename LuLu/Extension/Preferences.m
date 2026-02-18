@@ -249,6 +249,13 @@ bail:
                    updates[PREF_META_BLOCK]);
     }
 
+    // x block?
+    if (nil != updates[PREF_X_BLOCK]) {
+      // dbg msg
+      os_log_debug(logHandle, "user toggled 'x block' list: %{public}@",
+                   updates[PREF_X_BLOCK]);
+    }
+
   } // sync
 
   // happy

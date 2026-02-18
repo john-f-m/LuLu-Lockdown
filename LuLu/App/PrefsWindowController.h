@@ -144,6 +144,9 @@ enum profileViews {
 // meta block button
 @property(nonatomic, retain) NSButton *metaBlockButton;
 
+// x block button
+@property(nonatomic, retain) NSButton *xBlockButton;
+
 // added view
 @property(nonatomic) BOOL viewWasAdded;
 

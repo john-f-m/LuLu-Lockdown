@@ -62,7 +62,10 @@ This project extends LuLu with stricter connection decision workflows, silent re
 ### Social Media Block
 
 - Added `Social Media Block` functionality.
-- Currently supports `Block Meta (Facebook, Instagram, WhatsApp)` to block Meta-owned domains and IP prefixes (with CIDR matching).
+- Supported platforms:
+  - `Block Meta (Facebook, Instagram, WhatsApp)`: Blocks Meta-owned domains and IP prefixes (with CIDR matching).
+  - `Block X (Twitter)`: Blocks X-owned domains and IP prefixes (sourced from AS13414, AS35995, and AS63179).
+- Maintainable update scripts provided in `MetaBlock/scripts` and `XBlock/scripts` to keep IP ranges current.
 - More social media platforms scheduled for upcoming releases.
 
 ## Lockdown-Mac integration references

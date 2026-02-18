@@ -1,0 +1,19 @@
+{
+  "counts": {
+    "asns": 3,
+    "domains": 50,
+    "ipv4_prefixes": 60,
+    "ipv6_prefixes": 3,
+    "prefixes": 63,
+    "robot_user_agent_tokens": 2
+  },
+  "failed_asn_fetches": {},
+  "generated_at_utc": "2026-02-18T19:41:19.894274+00:00",
+  "source": {
+    "asn_api": "https://stat.ripe.net/data/announced-prefixes/data.json?resource=AS<ASN>",
+    "asn_file": "XBlock/blocklists/seed_asns.txt",
+    "domain_file": "XBlock/blocklists/seed_domains.txt",
+    "robot_file": "XBlock/blocklists/seed_robot_user_agents.txt",
+    "snapshot_prefix_file": "XBlock/blocklists/snapshot_prefixes.txt"
+  }
+}

@@ -87,6 +87,9 @@ extern XPCDaemonClient *xpcDaemonClient;
 //'meta block' button
 #define BUTTON_META_BLOCK 1400
 
+//'x block' button
+#define BUTTON_X_BLOCK 1401
+
 //'passive mode' actions
 #define BUTTON_PASSIVE_MODE_ACTION_ALLOW 0
 #define BUTTON_PASSIVE_MODE_ACTION_BLOCK 1
@@ -174,7 +177,7 @@ extern XPCDaemonClient *xpcDaemonClient;
 
   // import Lockdown blocklists button
   self.importLockdownBlocklistsButton = [[NSButton alloc]
-      initWithFrame:NSMakeRect(20, 40, self.listsView.frame.size.width - 40,
+      initWithFrame:NSMakeRect(20, 72, self.listsView.frame.size.width - 40,
                                24)];
   self.importLockdownBlocklistsButton.title =
       NSLocalizedString(@"Import Lockdown-Mac Bad Actor Lists",
@@ -197,6 +200,18 @@ extern XPCDaemonClient *xpcDaemonClient;
   self.metaBlockButton.tag = BUTTON_META_BLOCK;
   self.metaBlockButton.action = @selector(togglePreference:);
   [self.listsView addSubview:self.metaBlockButton];
+
+  // x block button
+  self.xBlockButton = [[NSButton alloc]
+      initWithFrame:NSMakeRect(20, 40, self.listsView.frame.size.width - 40,
+                               24)];
+  self.xBlockButton.title =
+      NSLocalizedString(@"Block X (Twitter)", @"Block X (Twitter)");
+  self.xBlockButton.setButtonType(NSButtonTypeSwitch);
+  self.xBlockButton.target = self;
+  self.xBlockButton.tag = BUTTON_X_BLOCK;
+  self.xBlockButton.action = @selector(togglePreference:);
+  [self.listsView addSubview:self.xBlockButton];
 }
 
 // sync strict/silent controls from current preferences
@@ -385,6 +400,9 @@ extern XPCDaemonClient *xpcDaemonClient;
 
     // set 'meta block' button state
     self.metaBlockButton.state = [self.preferences[PREF_META_BLOCK] boolValue];
+
+    // set 'x block' button state
+    self.xBlockButton.state = [self.preferences[PREF_X_BLOCK] boolValue];
 
     break;
 
@@ -653,10 +671,18 @@ bail:
 
   // meta block
   case BUTTON_META_BLOCK:
+
+    // grab state
     updatedPreferences[PREF_META_BLOCK] = state;
+
     break;
 
-  default:
+  // x block
+  case BUTTON_X_BLOCK:
+
+    // grab state
+    updatedPreferences[PREF_X_BLOCK] = state;
+
     break;
   }
 

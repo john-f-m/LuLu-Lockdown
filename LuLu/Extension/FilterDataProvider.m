@@ -40,6 +40,9 @@ extern BlockOrAllowList *blockList;
 // meta list
 BlockOrAllowList *metaList = nil;
 
+// x block list
+BlockOrAllowList *xList = nil;
+
 // path to connection telemetry
 static NSString *getConnectionsPath(void) {
   return [INSTALL_DIRECTORY stringByAppendingPathComponent:CONNECTIONS_FILE];
@@ -238,6 +241,21 @@ static void appendPendingConnection(NSDictionary *entry) {
   [metaList addFromFile:[INSTALL_DIRECTORY
                             stringByAppendingPathComponent:
                                 @"MetaBlock/generated/meta_ipv6_prefixes.txt"]];
+
+  // init x list
+  xList = [[BlockOrAllowList alloc] init:@""];
+
+  // load domains
+  [xList addFromFile:[INSTALL_DIRECTORY stringByAppendingPathComponent:
+                                            @"XBlock/generated/x_domains.txt"]];
+
+  // load prefixes
+  [xList addFromFile:[INSTALL_DIRECTORY
+                         stringByAppendingPathComponent:
+                             @"XBlock/generated/x_ipv4_prefixes.txt"]];
+  [xList addFromFile:[INSTALL_DIRECTORY
+                         stringByAppendingPathComponent:
+                             @"XBlock/generated/x_ipv6_prefixes.txt"]];
 
   // init network rule
   //  any/all outbound traffic
@@ -478,6 +496,23 @@ bail:
     // log
     appendConnectionEvent(makeConnectionEntry(
         (NEFilterSocketFlow *)flow, process, @"block", @"meta_block"));
+
+    // bail
+    goto bail;
+  }
+
+  // check for x block
+  if ((YES == [preferences.preferences[PREF_X_BLOCK] boolValue]) &&
+      (YES == [xList isMatch:(NEFilterSocketFlow *)flow])) {
+    // dbg msg
+    os_log_debug(logHandle, "flow matched x block list, DENYING");
+
+    // deny
+    verdict = [NEFilterNewFlowVerdict dropVerdict];
+
+    // log
+    appendConnectionEvent(makeConnectionEntry((NEFilterSocketFlow *)flow,
+                                              process, @"block", @"x_block"));
 
     // bail
     goto bail;

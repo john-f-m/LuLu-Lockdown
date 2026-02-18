@@ -1,0 +1,502 @@
+[
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||abs.twimg.com^"
+    },
+    "id": 1,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||ads-twitter.com^"
+    },
+    "id": 2,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||periscope.tv^"
+    },
+    "id": 3,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||pscp.tv^"
+    },
+    "id": 4,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||t.co^"
+    },
+    "id": 5,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||tweetdeck.com^"
+    },
+    "id": 6,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twimg.com^"
+    },
+    "id": 7,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.ca^"
+    },
+    "id": 8,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.co.uk^"
+    },
+    "id": 9,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com^"
+    },
+    "id": 10,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.ag^"
+    },
+    "id": 11,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.ar^"
+    },
+    "id": 12,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.bb^"
+    },
+    "id": 13,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.bo^"
+    },
+    "id": 14,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.br^"
+    },
+    "id": 15,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.bs^"
+    },
+    "id": 16,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.bz^"
+    },
+    "id": 17,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.co^"
+    },
+    "id": 18,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.cr^"
+    },
+    "id": 19,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.dm^"
+    },
+    "id": 20,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.do^"
+    },
+    "id": 21,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.ec^"
+    },
+    "id": 22,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.gd^"
+    },
+    "id": 23,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.gt^"
+    },
+    "id": 24,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.gy^"
+    },
+    "id": 25,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.hn^"
+    },
+    "id": 26,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.jm^"
+    },
+    "id": 27,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.kn^"
+    },
+    "id": 28,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.lc^"
+    },
+    "id": 29,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.mx^"
+    },
+    "id": 30,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.ni^"
+    },
+    "id": 31,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.pa^"
+    },
+    "id": 32,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.pe^"
+    },
+    "id": 33,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.pr^"
+    },
+    "id": 34,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.py^"
+    },
+    "id": 35,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.sr^"
+    },
+    "id": 36,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.sv^"
+    },
+    "id": 37,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.tt^"
+    },
+    "id": 38,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.uy^"
+    },
+    "id": 39,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.vc^"
+    },
+    "id": 40,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.com.ve^"
+    },
+    "id": 41,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.de^"
+    },
+    "id": 42,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.es^"
+    },
+    "id": 43,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.fr^"
+    },
+    "id": 44,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.it^"
+    },
+    "id": 45,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.jp^"
+    },
+    "id": 46,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twitter.nl^"
+    },
+    "id": 47,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twtrdns.net^"
+    },
+    "id": 48,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||twttr.com^"
+    },
+    "id": 49,
+    "priority": 1
+  },
+  {
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||x.com^"
+    },
+    "id": 50,
+    "priority": 1
+  }
+]
