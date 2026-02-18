@@ -77,4 +77,8 @@ fi
 mkdir -p Release
 cp -R "$DERIVED_DATA_PATH/Build/Products/$CONFIGURATION/LuLu.app" Release/
 
+# cleanup intermediate build files
+printf "\nCleaning up intermediate build artifacts...\n"
+rm -rf "$DERIVED_DATA_PATH"
+
 printf "\nBuild successful! LuLu.app is in the Release/ directory.\n"
