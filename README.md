@@ -91,9 +91,31 @@ To publish on GitHub Pages, set the repository Pages source to:
 
 ## Local Build
 
+### Xcode (GUI)
 1. Open `lulu.xcworkspace` in Xcode.
-2. Build targets for the app and extension.
-3. Approve required system/network extension permissions on macOS.
+2. Build the `LuLu` scheme.
+
+### CLI Build
+To build LuLu from the command line:
+
+1. Ensure full **Xcode** is installed and active:
+   `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`
+2. Run the build script:
+   `./scripts/build_app.sh`
+
+The built `LuLu.app` will be located in the `Release/` directory.
+
+### Create DMG
+To create a distributable disk image:
+
+1. Ensure the app is built (see above).
+2. Run the packaging script:
+   `./scripts/package_dmg.sh`
+
+This will generate a `LuLu_<version>.dmg` in the root directory.
+
+### Post-Build Actions
+- Approve required system/network extension permissions on macOS when running the app for the first time.
 
 ## Notes
 
