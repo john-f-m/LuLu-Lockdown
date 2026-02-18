@@ -147,6 +147,98 @@ extern NSMutableDictionary* alerts;
     return rules;
 }
 
+//get connection telemetry
+-(NSArray*)getConnectionEvents
+{
+    //events
+    __block NSArray* connectionEvents = @[];
+    
+    //dbg msg
+    os_log_debug(logHandle, "invoking daemon XPC method, '%s'", __PRETTY_FUNCTION__);
+    
+    [[self.daemon synchronousRemoteObjectProxyWithErrorHandler:^(NSError* proxyError)
+    {
+        //err msg
+        os_log_error(logHandle, "ERROR: failed to execute daemon XPC method '%s' (error: %{public}@)", __PRETTY_FUNCTION__, proxyError);
+        
+    }] getConnectionEvents:^(NSArray* eventsFromDaemon)
+    {
+        //save
+        connectionEvents = eventsFromDaemon ?: @[];
+    }];
+    
+    return connectionEvents;
+}
+
+//get pending connections
+-(NSArray*)getPendingConnections
+{
+    //events
+    __block NSArray* pendingConnections = @[];
+    
+    //dbg msg
+    os_log_debug(logHandle, "invoking daemon XPC method, '%s'", __PRETTY_FUNCTION__);
+    
+    [[self.daemon synchronousRemoteObjectProxyWithErrorHandler:^(NSError* proxyError)
+    {
+        //err msg
+        os_log_error(logHandle, "ERROR: failed to execute daemon XPC method '%s' (error: %{public}@)", __PRETTY_FUNCTION__, proxyError);
+        
+    }] getPendingConnections:^(NSArray* pendingFromDaemon)
+    {
+        //save
+        pendingConnections = pendingFromDaemon ?: @[];
+    }];
+    
+    return pendingConnections;
+}
+
+//resolve pending connection by creating a rule
+-(BOOL)resolvePendingConnection:(NSString*)uuid action:(NSNumber*)action
+{
+    //result
+    __block BOOL wasResolved = NO;
+    
+    //dbg msg
+    os_log_debug(logHandle, "invoking daemon XPC method, '%s' (%{public}@)", __PRETTY_FUNCTION__, uuid);
+    
+    [[self.daemon synchronousRemoteObjectProxyWithErrorHandler:^(NSError* proxyError)
+    {
+        //err msg
+        os_log_error(logHandle, "ERROR: failed to execute daemon XPC method '%s' (error: %{public}@)", __PRETTY_FUNCTION__, proxyError);
+        
+    }] resolvePendingConnection:uuid action:action reply:^(BOOL result)
+    {
+        //save
+        wasResolved = result;
+    }];
+    
+    return wasResolved;
+}
+
+//delete pending connection
+-(BOOL)deletePendingConnection:(NSString*)uuid
+{
+    //result
+    __block BOOL wasDeleted = NO;
+    
+    //dbg msg
+    os_log_debug(logHandle, "invoking daemon XPC method, '%s' (%{public}@)", __PRETTY_FUNCTION__, uuid);
+    
+    [[self.daemon synchronousRemoteObjectProxyWithErrorHandler:^(NSError* proxyError)
+    {
+        //err msg
+        os_log_error(logHandle, "ERROR: failed to execute daemon XPC method '%s' (error: %{public}@)", __PRETTY_FUNCTION__, proxyError);
+        
+    }] deletePendingConnection:uuid reply:^(BOOL result)
+    {
+        //save
+        wasDeleted = result;
+    }];
+    
+    return wasDeleted;
+}
+
 //add rule
 -(void)addRule:(NSDictionary*)info
 {

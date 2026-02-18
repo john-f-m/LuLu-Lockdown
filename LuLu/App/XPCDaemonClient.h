@@ -31,6 +31,18 @@
 // note: synchronous
 -(NSDictionary*)getRules;
 
+//get recent connection telemetry
+-(NSArray*)getConnectionEvents;
+
+//get pending (silent mode) connections
+-(NSArray*)getPendingConnections;
+
+//resolve pending connection by creating allow/block rule
+-(BOOL)resolvePendingConnection:(NSString*)uuid action:(NSNumber*)action;
+
+//delete pending connection without creating rule
+-(BOOL)deletePendingConnection:(NSString*)uuid;
+
 //add rule
 -(void)addRule:(NSDictionary*)info;
 

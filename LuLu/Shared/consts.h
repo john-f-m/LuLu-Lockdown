@@ -13,8 +13,8 @@
 //signers
 enum Signer{None, Apple, AppStore, DevID, AdHoc};
 
-//patreon url
-#define PATREON_URL @"https://www.patreon.com/join/objective_see"
+//project home url
+#define PATREON_URL @"https://github.com/john-f-m/LuLu-Lockdown"
 
 //vendor id string
 #define OBJECTIVE_SEE_VENDOR "com.objectiveSee"
@@ -49,6 +49,12 @@ enum Signer{None, Apple, AppStore, DevID, AdHoc};
 //(old) rules file
 #define RULES_FILE_V1 @"rules_v1.plist"
 
+//connections telemetry file
+#define CONNECTIONS_FILE @"connections.plist"
+
+//pending connections file
+#define PENDING_CONNECTIONS_FILE @"pendingConnections.plist"
+
 //client no status
 #define STATUS_CLIENT_UNKNOWN -1
 
@@ -74,10 +80,10 @@ enum Signer{None, Apple, AppStore, DevID, AdHoc};
 #define PRODUCT_VERSIONS_URL @"https://objective-see.org/products.json"
 
 //app name
-#define PRODUCT_NAME @"LuLu"
+#define PRODUCT_NAME @"LuLu-Lockdown"
 
 //product url
-#define PRODUCT_URL @"https://objective-see.org/products/lulu.html"
+#define PRODUCT_URL @"https://github.com/john-f-m/LuLu-Lockdown"
 
 //error(s) url
 #define ERRORS_URL @"https://objective-see.org/errors.html"
@@ -125,6 +131,11 @@ enum Signer{None, Apple, AppStore, DevID, AdHoc};
 #define PREF_PASSIVE_MODE @"passiveMode"
 #define PREF_PASSIVE_MODE_RULES @"passiveModeRules"
 #define PREF_PASSIVE_MODE_ACTION @"passiveModeAction"
+
+//prefs
+// strict/silent connection handling modes
+#define PREF_STRICT_MODE @"strictMode"
+#define PREF_SILENT_MODE @"silentMode"
 
 //index of allow/block in passive mode action
 #define PREF_PASSIVE_MODE_ALLOW 0
@@ -333,6 +344,9 @@ enum Signer{None, Apple, AppStore, DevID, AdHoc};
 #define KEY_URL @"url"
 #define KEY_PROTOCOL @"protocol"
 #define KEY_ENDPOINT @"endpoint"
+#define KEY_TIMESTAMP @"timestamp"
+#define KEY_DECISION @"decision"
+#define KEY_REASON @"reason"
 
 #define KEY_INDEX @"index"
 

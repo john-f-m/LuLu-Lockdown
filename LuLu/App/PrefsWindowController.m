@@ -13,6 +13,7 @@
 #import "AppDelegate.h"
 #import "PrefsWindowController.h"
 #import "UpdateWindowController.h"
+#import <netinet/in.h>
 
 /* GLOBALS */
 
@@ -21,6 +22,17 @@ extern os_log_t logHandle;
 
 //xpc for daemon comms
 extern XPCDaemonClient* xpcDaemonClient;
+
+@interface PrefsWindowController ()
+
+//advanced mode controls (added programmatically)
+@property(nonatomic, retain)NSButton* strictModeButton;
+@property(nonatomic, retain)NSButton* silentModeButton;
+@property(nonatomic, retain)NSButton* reviewPendingButton;
+@property(nonatomic, retain)NSButton* openInsightsButton;
+@property(nonatomic, retain)NSButton* importLockdownBlocklistsButton;
+
+@end
 
 @implementation PrefsWindowController
 
@@ -66,6 +78,12 @@ extern XPCDaemonClient* xpcDaemonClient;
 //'update mode' button
 #define BUTTON_NO_UPDATE_MODE 12
 
+//'strict mode' button
+#define BUTTON_STRICT_MODE 1300
+
+//'silent mode' button
+#define BUTTON_SILENT_MODE 1301
+
 //'passive mode' actions
 #define BUTTON_PASSIVE_MODE_ACTION_ALLOW 0
 #define BUTTON_PASSIVE_MODE_ACTION_BLOCK 1
@@ -80,7 +98,83 @@ extern XPCDaemonClient* xpcDaemonClient;
     //get prefs
     self.preferences = [xpcDaemonClient getPreferences];
     
+    //add advanced controls
+    [self installAdvancedFeatureControls];
+    
     return;
+}
+
+//make a checkbox-style button
+-(NSButton*)makeCheckbox:(NSString*)title frame:(NSRect)frame tag:(NSInteger)tag
+{
+    //button
+    NSButton* button = [[NSButton alloc] initWithFrame:frame];
+    
+    //set
+    button.title = title;
+    button.tag = tag;
+    button.buttonType = NSButtonTypeSwitch;
+    button.target = self;
+    button.action = @selector(togglePreference:);
+    
+    return button;
+}
+
+//add advanced controls (strict/silent/review/import/insights)
+-(void)installAdvancedFeatureControls
+{
+    //already added?
+    if(nil != self.strictModeButton)
+    {
+        return;
+    }
+    
+    //layout values
+    CGFloat width = self.modesView.frame.size.width - 40;
+    
+    //strict mode
+    self.strictModeButton = [self makeCheckbox:NSLocalizedString(@"Strict interactive mode (prompt for each new/changed connection)", @"Strict interactive mode (prompt for each new/changed connection)")
+                                         frame:NSMakeRect(20, 24, width, 20)
+                                           tag:BUTTON_STRICT_MODE];
+    [self.modesView addSubview:self.strictModeButton];
+    
+    //silent mode
+    self.silentModeButton = [self makeCheckbox:NSLocalizedString(@"Silent mode (allow now, review and block later)", @"Silent mode (allow now, review and block later)")
+                                         frame:NSMakeRect(20, 4, width, 20)
+                                           tag:BUTTON_SILENT_MODE];
+    [self.modesView addSubview:self.silentModeButton];
+    
+    //review pending queue button
+    self.reviewPendingButton = [[NSButton alloc] initWithFrame:NSMakeRect(20, 50, 190, 24)];
+    self.reviewPendingButton.title = NSLocalizedString(@"Review Silent Queue", @"Review Silent Queue");
+    self.reviewPendingButton.bezelStyle = NSBezelStyleRounded;
+    self.reviewPendingButton.target = self;
+    self.reviewPendingButton.action = @selector(reviewPendingConnections:);
+    [self.modesView addSubview:self.reviewPendingButton];
+    
+    //open traffic insights button
+    self.openInsightsButton = [[NSButton alloc] initWithFrame:NSMakeRect(220, 50, 180, 24)];
+    self.openInsightsButton.title = NSLocalizedString(@"Open Traffic Insights", @"Open Traffic Insights");
+    self.openInsightsButton.bezelStyle = NSBezelStyleRounded;
+    self.openInsightsButton.target = self;
+    self.openInsightsButton.action = @selector(openTrafficInsights:);
+    [self.modesView addSubview:self.openInsightsButton];
+    
+    //import Lockdown blocklists button
+    self.importLockdownBlocklistsButton = [[NSButton alloc] initWithFrame:NSMakeRect(20, 8, self.listsView.frame.size.width - 40, 24)];
+    self.importLockdownBlocklistsButton.title = NSLocalizedString(@"Import Lockdown-Mac Bad Actor Lists", @"Import Lockdown-Mac Bad Actor Lists");
+    self.importLockdownBlocklistsButton.bezelStyle = NSBezelStyleRounded;
+    self.importLockdownBlocklistsButton.target = self;
+    self.importLockdownBlocklistsButton.action = @selector(importLockdownBlocklists:);
+    [self.listsView addSubview:self.importLockdownBlocklistsButton];
+}
+
+//sync strict/silent controls from current preferences
+-(void)syncAdvancedModeControls
+{
+    //strict/silent states
+    self.strictModeButton.state = [self.preferences[PREF_STRICT_MODE] boolValue];
+    self.silentModeButton.state = [self.preferences[PREF_SILENT_MODE] boolValue];
 }
 
 //set subtitle to current profile
@@ -201,6 +295,9 @@ extern XPCDaemonClient* xpcDaemonClient;
             
             //set 'no VT icon' button state
             ((NSButton*)[view viewWithTag:BUTTON_NO_VT_MODE]).state = [self.preferences[PREF_NO_VT_MODE] boolValue];
+            
+            //sync strict/silent controls
+            [self syncAdvancedModeControls];
             
             break;
             
@@ -416,11 +513,57 @@ bail:
             //grab state
             updatedPreferences[PREF_PASSIVE_MODE] = state;
             
+            //passive mode and strict/silent are mutually exclusive
+            if(NSControlStateValueOn == state.longValue)
+            {
+                updatedPreferences[PREF_STRICT_MODE] = @NO;
+                updatedPreferences[PREF_SILENT_MODE] = @NO;
+                
+                //update UI immediately
+                self.strictModeButton.state = NSControlStateValueOff;
+                self.silentModeButton.state = NSControlStateValueOff;
+            }
+            
             //grab selected item of action
             updatedPreferences[PREF_PASSIVE_MODE_ACTION] = [NSNumber numberWithInteger:self.passiveModeAction.indexOfSelectedItem];
             
             //grab selected item of rules
             updatedPreferences[PREF_PASSIVE_MODE_RULES] = [NSNumber numberWithInteger:self.passiveModeRules.indexOfSelectedItem];
+            
+            break;
+            
+        //strict mode
+        case BUTTON_STRICT_MODE:
+            
+            //set strict mode
+            updatedPreferences[PREF_STRICT_MODE] = state;
+            
+            //strict mode and passive/silent are mutually exclusive
+            if(NSControlStateValueOn == state.longValue)
+            {
+                updatedPreferences[PREF_SILENT_MODE] = @NO;
+                updatedPreferences[PREF_PASSIVE_MODE] = @NO;
+                updatedPreferences[PREF_ALERT_LAST_RULE_SCOPE] = @(ACTION_SCOPE_ENDPOINT);
+                self.silentModeButton.state = NSControlStateValueOff;
+                ((NSButton*)[self.modesView viewWithTag:BUTTON_PASSIVE_MODE]).state = NSControlStateValueOff;
+            }
+            
+            break;
+            
+        //silent mode
+        case BUTTON_SILENT_MODE:
+            
+            //set silent mode
+            updatedPreferences[PREF_SILENT_MODE] = state;
+            
+            //silent mode and passive/strict are mutually exclusive
+            if(NSControlStateValueOn == state.longValue)
+            {
+                updatedPreferences[PREF_STRICT_MODE] = @NO;
+                updatedPreferences[PREF_PASSIVE_MODE] = @NO;
+                self.strictModeButton.state = NSControlStateValueOff;
+                ((NSButton*)[self.modesView viewWithTag:BUTTON_PASSIVE_MODE]).state = NSControlStateValueOff;
+            }
             
             break;
             
@@ -476,6 +619,9 @@ bail:
         //send XPC msg to daemon to update prefs
         // returns (all/latest) prefs, which is what we want
         self.preferences = [xpcDaemonClient updatePreferences:updatedPreferences];
+        
+        //sync strict/silent controls
+        [self syncAdvancedModeControls];
 
         //call back into app to process
         // e.g. show/hide status bar icon, etc.
@@ -1045,6 +1191,445 @@ bail:
 bail:
     
     return;
+}
+
+//sort connections by timestamp descending
+-(NSArray*)sortedConnections:(NSArray*)connections
+{
+    return [connections sortedArrayUsingComparator:^NSComparisonResult(NSDictionary* left, NSDictionary* right) {
+        
+        //timestamps
+        NSDate* leftTime = left[KEY_TIMESTAMP];
+        NSDate* rightTime = right[KEY_TIMESTAMP];
+        
+        //best effort if invalid
+        if(YES != [leftTime isKindOfClass:[NSDate class]]) leftTime = [NSDate distantPast];
+        if(YES != [rightTime isKindOfClass:[NSDate class]]) rightTime = [NSDate distantPast];
+        
+        //descending
+        return [rightTime compare:leftTime];
+    }];
+}
+
+//convert protocol number to readable name
+-(NSString*)protocolName:(NSNumber*)protocol
+{
+    if(IPPROTO_TCP == protocol.intValue) return @"TCP";
+    if(IPPROTO_UDP == protocol.intValue) return @"UDP";
+    if(IPPROTO_ICMP == protocol.intValue) return @"ICMP";
+    return [NSString stringWithFormat:@"%d", protocol.intValue];
+}
+
+//simple html escaper
+-(NSString*)htmlEscape:(NSString*)string
+{
+    if(nil == string) return @"";
+    
+    NSString* escaped = [string stringByReplacingOccurrencesOfString:@"&" withString:@"&amp;"];
+    escaped = [escaped stringByReplacingOccurrencesOfString:@"<" withString:@"&lt;"];
+    escaped = [escaped stringByReplacingOccurrencesOfString:@">" withString:@"&gt;"];
+    escaped = [escaped stringByReplacingOccurrencesOfString:@"\"" withString:@"&quot;"];
+    return escaped;
+}
+
+//simple IP check
+-(BOOL)isIPAddress:(NSString*)value
+{
+    //not set?
+    if(0 == value.length) return NO;
+    
+    //IPv6 (simple check)
+    if([value containsString:@":"]) return YES;
+    
+    //IPv4
+    NSRegularExpression* regex = [NSRegularExpression regularExpressionWithPattern:@"^([0-9]{1,3}\\.){3}[0-9]{1,3}$" options:0 error:nil];
+    return (0 != [regex numberOfMatchesInString:value options:0 range:NSMakeRange(0, value.length)]);
+}
+
+//resolve IP to geo coordinates
+-(NSDictionary*)geoForIP:(NSString*)ip
+{
+    //URL string
+    NSString* encoded = [ip stringByAddingPercentEncodingWithAllowedCharacters:NSCharacterSet.URLPathAllowedCharacterSet];
+    NSString* urlString = [NSString stringWithFormat:@"https://ipapi.co/%@/json/", encoded];
+    
+    //data
+    NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:urlString]];
+    if(nil == data) return nil;
+    
+    //json
+    NSDictionary* json = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+    if(YES != [json isKindOfClass:[NSDictionary class]]) return nil;
+    
+    //lat/lon
+    NSNumber* latitude = [json[@"latitude"] isKindOfClass:[NSNumber class]] ? json[@"latitude"] : nil;
+    NSNumber* longitude = [json[@"longitude"] isKindOfClass:[NSNumber class]] ? json[@"longitude"] : nil;
+    if( (nil == latitude) || (nil == longitude) ) return nil;
+    
+    return @{
+        @"ip": ip,
+        @"lat": latitude,
+        @"lon": longitude,
+        @"city": json[@"city"] ?: @"",
+        @"country": json[@"country_name"] ?: @""
+    };
+}
+
+//review pending silent-mode connections
+-(IBAction)reviewPendingConnections:(id)sender
+{
+    //pending
+    NSArray* pending = [self sortedConnections:[xpcDaemonClient getPendingConnections]];
+    
+    //none?
+    if(0 == pending.count)
+    {
+        showAlert(NSAlertStyleInformational,
+                  NSLocalizedString(@"No Pending Connections", @"No Pending Connections"),
+                  NSLocalizedString(@"There are no queued silent-mode connections to review.", @"There are no queued silent-mode connections to review."),
+                  @[NSLocalizedString(@"OK", @"OK")]);
+        return;
+    }
+    
+    //counts
+    NSInteger allowed = 0;
+    NSInteger blocked = 0;
+    NSInteger skipped = 0;
+    
+    //review entries one-by-one
+    for(NSDictionary* entry in pending)
+    {
+        //title
+        NSString* title = [NSString stringWithFormat:NSLocalizedString(@"Review %@ → %@:%@", @"Review %@ → %@:%@"),
+                           entry[KEY_PROCESS_NAME] ?: @"(unknown)",
+                           entry[KEY_ENDPOINT_ADDR] ?: @"(unknown)",
+                           entry[KEY_ENDPOINT_PORT] ?: @"-"];
+        
+        //details
+        NSString* details = [NSString stringWithFormat:@"Path: %@\nProtocol: %@\nDecision needed for this queued connection.",
+                             entry[KEY_PATH] ?: @"(unknown)",
+                             [self protocolName:entry[KEY_PROTOCOL] ?: @0]];
+        
+        //response
+        NSModalResponse response = showAlert(NSAlertStyleInformational,
+                                             title,
+                                             details,
+                                             @[
+                                                NSLocalizedString(@"Allow", @"Allow"),
+                                                NSLocalizedString(@"Block", @"Block"),
+                                                NSLocalizedString(@"Skip", @"Skip"),
+                                                NSLocalizedString(@"Stop Review", @"Stop Review")
+                                             ]);
+        
+        //allow
+        if(NSAlertFirstButtonReturn == response)
+        {
+            if(YES == [xpcDaemonClient resolvePendingConnection:entry[KEY_UUID] action:@RULE_STATE_ALLOW])
+            {
+                allowed++;
+            }
+            continue;
+        }
+        
+        //block
+        if(NSAlertSecondButtonReturn == response)
+        {
+            if(YES == [xpcDaemonClient resolvePendingConnection:entry[KEY_UUID] action:@RULE_STATE_BLOCK])
+            {
+                blocked++;
+            }
+            continue;
+        }
+        
+        //skip
+        if(NSAlertThirdButtonReturn == response)
+        {
+            skipped++;
+            continue;
+        }
+        
+        //stop review
+        break;
+    }
+    
+    //refresh preferences and notify app
+    self.preferences = [xpcDaemonClient getPreferences];
+    [((AppDelegate*)[[NSApplication sharedApplication] delegate]) preferencesChanged:self.preferences];
+    
+    //summary
+    showAlert(NSAlertStyleInformational,
+              NSLocalizedString(@"Review Complete", @"Review Complete"),
+              [NSString stringWithFormat:NSLocalizedString(@"Allowed: %ld\nBlocked: %ld\nSkipped: %ld", @"Allowed: %ld\nBlocked: %ld\nSkipped: %ld"),
+               (long)allowed, (long)blocked, (long)skipped],
+              @[NSLocalizedString(@"OK", @"OK")]);
+}
+
+//import curated Lockdown-Mac bad actor lists and enable as block list
+-(IBAction)importLockdownBlocklists:(id)sender
+{
+    //Lockdown feeds
+    NSArray* feeds = @[
+        @"https://raw.githubusercontent.com/confirmedcode/Lockdown-Mac/master/Block%20Lists/ransomware.txt",
+        @"https://raw.githubusercontent.com/confirmedcode/Lockdown-Mac/master/Block%20Lists/crypto_mining.txt",
+        @"https://raw.githubusercontent.com/confirmedcode/Lockdown-Mac/master/Block%20Lists/data_trackers.txt",
+        @"https://raw.githubusercontent.com/confirmedcode/Lockdown-Mac/master/Block%20Lists/reporting.txt",
+        @"https://raw.githubusercontent.com/confirmedcode/Lockdown-Mac/master/Block%20Lists/general_ads.txt",
+        @"https://raw.githubusercontent.com/confirmedcode/Lockdown-Mac/master/Block%20Lists/marketing.txt",
+        @"https://raw.githubusercontent.com/confirmedcode/Lockdown-Mac/master/Block%20Lists/facebook_inc.txt",
+        @"https://raw.githubusercontent.com/confirmedcode/Lockdown-Mac/master/Block%20Lists/amazon_trackers.txt"
+    ];
+    
+    //all domains
+    NSMutableOrderedSet* items = [NSMutableOrderedSet orderedSet];
+    
+    //successful feeds
+    NSInteger feedCount = 0;
+    
+    //load feeds
+    for(NSString* feed in feeds)
+    {
+        //data
+        NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:feed]];
+        if(nil == data) continue;
+        
+        //to string
+        NSString* content = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        if(0 == content.length) continue;
+        
+        //mark successful feed
+        feedCount++;
+        
+        //split lines
+        NSArray* lines = [content componentsSeparatedByCharactersInSet:NSCharacterSet.newlineCharacterSet];
+        for(NSString* line in lines)
+        {
+            //trim
+            NSString* trimmed = [line stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+            
+            //skip blanks/comments
+            if( (0 == trimmed.length) ||
+                (YES == [trimmed hasPrefix:@"#"]) )
+            {
+                continue;
+            }
+            
+            [items addObject:trimmed.lowercaseString];
+        }
+    }
+    
+    //none loaded?
+    if(0 == items.count)
+    {
+        showAlert(NSAlertStyleWarning,
+                  NSLocalizedString(@"Import Failed", @"Import Failed"),
+                  NSLocalizedString(@"Unable to download Lockdown-Mac block lists right now.", @"Unable to download Lockdown-Mac block lists right now."),
+                  @[NSLocalizedString(@"OK", @"OK")]);
+        return;
+    }
+    
+    //destination directory
+    NSString* appSupport = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) firstObject];
+    NSString* directory = [appSupport stringByAppendingPathComponent:@"LuLu"];
+    NSString* path = [directory stringByAppendingPathComponent:@"lockdown_bad_actors.txt"];
+    
+    //create directory if needed
+    [NSFileManager.defaultManager createDirectoryAtPath:directory withIntermediateDirectories:YES attributes:nil error:nil];
+    
+    //save merged list
+    NSString* merged = [[items array] componentsJoinedByString:@"\n"];
+    if(YES != [merged writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil])
+    {
+        showAlert(NSAlertStyleWarning,
+                  NSLocalizedString(@"Import Failed", @"Import Failed"),
+                  NSLocalizedString(@"Failed to save merged block list to disk.", @"Failed to save merged block list to disk."),
+                  @[NSLocalizedString(@"OK", @"OK")]);
+        return;
+    }
+    
+    //enable block list and set path
+    self.preferences = [xpcDaemonClient updatePreferences:@{
+        PREF_USE_BLOCK_LIST:@YES,
+        PREF_BLOCK_LIST:path
+    }];
+    
+    //sync UI state
+    self.blockList.stringValue = path;
+    self.blockList.enabled = YES;
+    self.selectBlockListButton.enabled = YES;
+    ((NSButton*)[self.listsView viewWithTag:BUTTON_USE_BLOCK_LIST]).state = NSControlStateValueOn;
+    
+    //notify app of preference changes
+    [((AppDelegate*)[[NSApplication sharedApplication] delegate]) preferencesChanged:self.preferences];
+    
+    //done
+    showAlert(NSAlertStyleInformational,
+              NSLocalizedString(@"Lockdown Lists Imported", @"Lockdown Lists Imported"),
+              [NSString stringWithFormat:NSLocalizedString(@"Imported %lu unique entries from %ld Lockdown-Mac lists.\nSaved to:\n%@", @"Imported %lu unique entries from %ld Lockdown-Mac lists.\nSaved to:\n%@"), (unsigned long)items.count, (long)feedCount, path],
+              @[NSLocalizedString(@"OK", @"OK")]);
+}
+
+//open generated traffic insights (graphs + global map)
+-(IBAction)openTrafficInsights:(id)sender
+{
+    //events
+    NSArray* allEvents = [self sortedConnections:[xpcDaemonClient getConnectionEvents]];
+    
+    //none?
+    if(0 == allEvents.count)
+    {
+        showAlert(NSAlertStyleInformational,
+                  NSLocalizedString(@"No Traffic Data Yet", @"No Traffic Data Yet"),
+                  NSLocalizedString(@"No connection telemetry has been captured yet.", @"No connection telemetry has been captured yet."),
+                  @[NSLocalizedString(@"OK", @"OK")]);
+        return;
+    }
+    
+    //process in background
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        
+        //limit
+        NSUInteger maxEvents = MIN((NSUInteger)500, allEvents.count);
+        NSArray* events = [allEvents subarrayWithRange:NSMakeRange(0, maxEvents)];
+        
+        //protocol and port counters
+        NSMutableDictionary* protocolCounts = [NSMutableDictionary dictionary];
+        NSMutableDictionary* portCounts = [NSMutableDictionary dictionary];
+        
+        //IP candidates for geolocation
+        NSMutableOrderedSet* uniqueIPs = [NSMutableOrderedSet orderedSet];
+        
+        //aggregate
+        for(NSDictionary* event in events)
+        {
+            NSString* protocol = [self protocolName:event[KEY_PROTOCOL] ?: @0];
+            protocolCounts[protocol] = @([protocolCounts[protocol] integerValue] + 1);
+            
+            NSString* port = event[KEY_ENDPOINT_PORT] ?: @"-";
+            portCounts[port] = @([portCounts[port] integerValue] + 1);
+            
+            NSString* endpoint = event[KEY_ENDPOINT_ADDR];
+            if(YES == [self isIPAddress:endpoint])
+            {
+                [uniqueIPs addObject:endpoint];
+            }
+        }
+        
+        //top ports
+        NSArray* topPorts = [portCounts keysSortedByValueUsingComparator:^NSComparisonResult(NSNumber* left, NSNumber* right) {
+            return [right compare:left];
+        }];
+        if(topPorts.count > 8)
+        {
+            topPorts = [topPorts subarrayWithRange:NSMakeRange(0, 8)];
+        }
+        
+        //resolve geo markers (best effort, capped)
+        NSMutableArray* markers = [NSMutableArray array];
+        NSUInteger markerLimit = MIN((NSUInteger)20, uniqueIPs.count);
+        for(NSUInteger i = 0; i < markerLimit; i++)
+        {
+            NSDictionary* geo = [self geoForIP:uniqueIPs[i]];
+            if(nil != geo)
+            {
+                [markers addObject:geo];
+            }
+        }
+        
+        //build html
+        NSMutableString* html = [NSMutableString string];
+        [html appendString:@"<!doctype html><html><head><meta charset='utf-8'><title>LuLu Traffic Insights</title>"];
+        [html appendString:@"<meta name='viewport' content='width=device-width, initial-scale=1'>"];
+        [html appendString:@"<link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css' />"];
+        [html appendString:@"<style>body{font-family:-apple-system,Helvetica,Arial,sans-serif;background:#f4f7fb;color:#111;margin:0;padding:20px;}"];
+        [html appendString:@"h1{margin:0 0 6px 0;font-size:24px;}h2{margin:18px 0 8px 0;font-size:18px;}"];
+        [html appendString:@".card{background:#fff;border:1px solid #dde3ea;border-radius:10px;padding:14px;margin-bottom:14px;}"];
+        [html appendString:@".bar{margin:8px 0;} .bar .label{font-size:13px;margin-bottom:4px;} .bar .track{height:12px;background:#e8eef7;border-radius:8px;overflow:hidden;}"];
+        [html appendString:@".bar .fill{height:12px;background:#2f6fec;} table{width:100%;border-collapse:collapse;font-size:12px;} th,td{padding:6px;border-bottom:1px solid #eef2f7;text-align:left;}"];
+        [html appendString:@"#map{height:420px;border-radius:10px;overflow:hidden;border:1px solid #dde3ea;} .muted{color:#5f6b7a;font-size:12px;} </style></head><body>"];
+        
+        [html appendFormat:@"<h1>LuLu Traffic Insights</h1><div class='muted'>Generated %@</div>", [NSDate date]];
+        
+        //protocol chart
+        [html appendString:@"<div class='card'><h2>Protocol Distribution</h2>"];
+        NSInteger protocolMax = 1;
+        for(NSNumber* count in protocolCounts.allValues)
+        {
+            if(count.integerValue > protocolMax) protocolMax = count.integerValue;
+        }
+        for(NSString* key in [protocolCounts keysSortedByValueUsingComparator:^NSComparisonResult(NSNumber* left, NSNumber* right) { return [right compare:left]; }])
+        {
+            NSInteger count = [protocolCounts[key] integerValue];
+            NSInteger pct = (NSInteger)((count * 100.0f) / protocolMax);
+            [html appendFormat:@"<div class='bar'><div class='label'>%@ (%ld)</div><div class='track'><div class='fill' style='width:%ld%%'></div></div></div>", [self htmlEscape:key], (long)count, (long)pct];
+        }
+        [html appendString:@"</div>"];
+        
+        //port chart
+        [html appendString:@"<div class='card'><h2>Top Destination Ports</h2>"];
+        NSInteger portMax = 1;
+        for(NSString* port in topPorts)
+        {
+            NSInteger count = [portCounts[port] integerValue];
+            if(count > portMax) portMax = count;
+        }
+        for(NSString* port in topPorts)
+        {
+            NSInteger count = [portCounts[port] integerValue];
+            NSInteger pct = (NSInteger)((count * 100.0f) / portMax);
+            [html appendFormat:@"<div class='bar'><div class='label'>%@ (%ld)</div><div class='track'><div class='fill' style='width:%ld%%'></div></div></div>", [self htmlEscape:port], (long)count, (long)pct];
+        }
+        [html appendString:@"</div>"];
+        
+        //map
+        [html appendString:@"<div class='card'><h2>Global Outgoing Traffic Map (IP-based)</h2><div id='map'></div><div class='muted'>Markers are best-effort geo lookups for remote IPs.</div></div>"];
+        
+        //recent table
+        [html appendString:@"<div class='card'><h2>Recent Connections</h2><table><thead><tr><th>Time</th><th>App</th><th>Endpoint</th><th>Port</th><th>Protocol</th><th>Decision</th><th>Reason</th></tr></thead><tbody>"];
+        for(NSDictionary* event in events)
+        {
+            NSDate* timestamp = [event[KEY_TIMESTAMP] isKindOfClass:[NSDate class]] ? event[KEY_TIMESTAMP] : [NSDate date];
+            NSString* time = [NSDateFormatter localizedStringFromDate:timestamp dateStyle:NSDateFormatterNoStyle timeStyle:NSDateFormatterMediumStyle];
+            [html appendFormat:@"<tr><td>%@</td><td>%@</td><td>%@</td><td>%@</td><td>%@</td><td>%@</td><td>%@</td></tr>",
+             [self htmlEscape:time],
+             [self htmlEscape:event[KEY_PROCESS_NAME] ?: @"-"],
+             [self htmlEscape:event[KEY_ENDPOINT_ADDR] ?: @"-"],
+             [self htmlEscape:event[KEY_ENDPOINT_PORT] ?: @"-"],
+             [self htmlEscape:[self protocolName:event[KEY_PROTOCOL] ?: @0]],
+             [self htmlEscape:event[KEY_DECISION] ?: @"-"],
+             [self htmlEscape:event[KEY_REASON] ?: @"-"]];
+        }
+        [html appendString:@"</tbody></table></div>"];
+        
+        //map script
+        NSData* markerData = [NSJSONSerialization dataWithJSONObject:markers options:0 error:nil];
+        NSString* markerJSON = [[NSString alloc] initWithData:markerData encoding:NSUTF8StringEncoding] ?: @"[]";
+        [html appendString:@"<script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script><script>"];
+        [html appendFormat:@"const markers=%@;", markerJSON];
+        [html appendString:@"const map=L.map('map').setView([20,0],2);"];
+        [html appendString:@"L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);"];
+        [html appendString:@"if(markers.length===0){document.getElementById('map').innerHTML='<div style=\"padding:16px;color:#5f6b7a;\">No IP geolocation data available for current events.</div>'; }"];
+        [html appendString:@"const bounds=[]; markers.forEach(m=>{ const label=[m.ip,m.city,m.country].filter(Boolean).join(' - '); L.marker([m.lat,m.lon]).addTo(map).bindPopup(label); bounds.push([m.lat,m.lon]); }); if(bounds.length){ map.fitBounds(bounds,{padding:[30,30]}); }"];
+        [html appendString:@"</script></body></html>"];
+        
+        //write file
+        NSString* output = [NSTemporaryDirectory() stringByAppendingPathComponent:@"lulu-traffic-insights.html"];
+        NSError* writeError = nil;
+        BOOL written = [html writeToFile:output atomically:YES encoding:NSUTF8StringEncoding error:&writeError];
+        
+        //open on main thread
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if(YES != written)
+            {
+                showAlert(NSAlertStyleWarning,
+                          NSLocalizedString(@"Failed to Build Insights", @"Failed to Build Insights"),
+                          writeError.localizedDescription ?: NSLocalizedString(@"Unknown error while writing insights file.", @"Unknown error while writing insights file."),
+                          @[NSLocalizedString(@"OK", @"OK")]);
+                return;
+            }
+            
+            [NSWorkspace.sharedWorkspace openURL:[NSURL fileURLWithPath:output]];
+        });
+    });
 }
 
 //'check for update' button handler

@@ -86,8 +86,46 @@ extern os_log_t logHandle;
     // capture prefs
     if( (SHOW_CONFIGURE+1) == ((NSToolbarItem*)sender).tag)
     {
+        //should use recommended baseline?
+        BOOL useRecommendedBaseline = YES;
+        
+        //default allow settings from UI
+        BOOL allowApple = self.allowApple.state;
+        BOOL allowInstalled = self.allowInstalled.state;
+        
+        //ask user if they want to initialize from scratch
+        if(NSAlertSecondButtonReturn == showAlert(NSAlertStyleInformational,
+                                                  NSLocalizedString(@"Initialize Rules", @"Initialize Rules"),
+                                                  NSLocalizedString(@"LuLu can start by permitting Apple apps and apps already installed before LuLu. Do you prefer this baseline, or initialize from the beginning?", @"LuLu can start by permitting Apple apps and apps already installed before LuLu. Do you prefer this baseline, or initialize from the beginning?"),
+                                                  @[NSLocalizedString(@"Use Baseline", @"Use Baseline"), NSLocalizedString(@"Initialize From Beginning", @"Initialize From Beginning")]))
+        {
+            useRecommendedBaseline = NO;
+        }
+        
+        //initialize from beginning
+        // disable baseline allowances
+        if(NO == useRecommendedBaseline)
+        {
+            allowApple = NO;
+            allowInstalled = NO;
+        }
+        
         //capture
-        self.preferences = @{PREF_ALLOW_APPLE:[NSNumber numberWithBool:self.allowApple.state], PREF_ALLOW_INSTALLED: [NSNumber numberWithBool:self.allowInstalled.state], PREF_ALLOW_DNS: [NSNumber numberWithBool:self.allowDNS.state], PREF_ALLOW_SIMULATOR:@NO, PREF_PASSIVE_MODE:@NO, PREF_PASSIVE_MODE_ACTION:@0, PREF_BLOCK_MODE:@NO, PREF_NO_ICON_MODE:@NO, PREF_NO_VT_MODE:@NO, PREF_NO_UPDATE_MODE:@NO, PREF_INSTALL_TIMESTAMP:[NSDate date]};
+        self.preferences = @{
+            PREF_ALLOW_APPLE:@(allowApple),
+            PREF_ALLOW_INSTALLED:@(allowInstalled),
+            PREF_ALLOW_DNS:[NSNumber numberWithBool:self.allowDNS.state],
+            PREF_ALLOW_SIMULATOR:@NO,
+            PREF_PASSIVE_MODE:@NO,
+            PREF_PASSIVE_MODE_ACTION:@0,
+            PREF_STRICT_MODE:@NO,
+            PREF_SILENT_MODE:@NO,
+            PREF_BLOCK_MODE:@NO,
+            PREF_NO_ICON_MODE:@NO,
+            PREF_NO_VT_MODE:@NO,
+            PREF_NO_UPDATE_MODE:@NO,
+            PREF_INSTALL_TIMESTAMP:[NSDate date]
+        };
     }
     
     //set next view

@@ -37,8 +37,157 @@ extern BlockOrAllowList* allowList;
 //block list
 extern BlockOrAllowList* blockList;
 
-//allow list
-extern
+//path to connection telemetry
+static NSString* getConnectionsPath(void)
+{
+    return [INSTALL_DIRECTORY stringByAppendingPathComponent:CONNECTIONS_FILE];
+}
+
+//path to pending silent-mode connections
+static NSString* getPendingConnectionsPath(void)
+{
+    return [INSTALL_DIRECTORY stringByAppendingPathComponent:PENDING_CONNECTIONS_FILE];
+}
+
+//load list entries from disk
+static NSMutableArray* loadEntries(NSString* path)
+{
+    //entries
+    NSArray* entries = [NSArray arrayWithContentsOfFile:path];
+    
+    //sanity check
+    if(YES != [entries isKindOfClass:[NSArray class]])
+    {
+        return [NSMutableArray array];
+    }
+    
+    return [entries mutableCopy];
+}
+
+//save list entries to disk
+static void saveEntries(NSArray* entries, NSString* path)
+{
+    [entries writeToFile:path atomically:YES];
+}
+
+//extract best endpoint address from flow
+static NSString* endpointAddressFromFlow(NEFilterSocketFlow* flow)
+{
+    //endpoint
+    NWHostEndpoint* remoteEndpoint = (NWHostEndpoint*)flow.remoteEndpoint;
+    
+    //prefer url host
+    if(0 != flow.URL.host.length)
+    {
+        return flow.URL.host;
+    }
+    
+    //then remote hostname
+    if(@available(macOS 11, *))
+    {
+        if(0 != flow.remoteHostname.length)
+        {
+            return flow.remoteHostname;
+        }
+    }
+    
+    //fallback to endpoint host
+    return remoteEndpoint.hostname ?: @"";
+}
+
+//create connection event entry
+static NSMutableDictionary* makeConnectionEntry(NEFilterSocketFlow* flow, Process* process, NSString* decision, NSString* reason)
+{
+    //entry
+    NSMutableDictionary* entry = [NSMutableDictionary dictionary];
+    
+    //endpoint
+    NWHostEndpoint* remoteEndpoint = (NWHostEndpoint*)flow.remoteEndpoint;
+    
+    //set base data
+    entry[KEY_UUID] = [[NSUUID UUID] UUIDString];
+    entry[KEY_TIMESTAMP] = [NSDate date];
+    entry[KEY_PATH] = process.path ?: @"";
+    entry[KEY_PROCESS_NAME] = process.name ?: process.binary.name ?: @"";
+    entry[KEY_ENDPOINT_ADDR] = endpointAddressFromFlow(flow);
+    entry[KEY_ENDPOINT_PORT] = remoteEndpoint.port ?: @"";
+    entry[KEY_PROTOCOL] = [NSNumber numberWithInt:flow.socketProtocol];
+    entry[KEY_DECISION] = decision ?: @"allow";
+    entry[KEY_REASON] = reason ?: @"";
+    entry[KEY_KEY] = process.key ?: @"";
+    
+    //optional fields
+    if(0 != flow.URL.absoluteString.length)
+    {
+        entry[KEY_URL] = flow.URL.absoluteString;
+    }
+    if(0 != remoteEndpoint.hostname.length)
+    {
+        entry[KEY_HOST] = remoteEndpoint.hostname;
+    }
+    if(nil != process.csInfo)
+    {
+        entry[KEY_CS_INFO] = process.csInfo;
+    }
+    
+    return entry;
+}
+
+//append a connection event (bounded)
+static void appendConnectionEvent(NSDictionary* entry)
+{
+    @synchronized(NSFileManager.defaultManager)
+    {
+        //events
+        NSMutableArray* events = loadEntries(getConnectionsPath());
+        
+        //append
+        [events addObject:entry];
+        
+        //cap list size
+        if(events.count > 5000)
+        {
+            [events removeObjectsInRange:NSMakeRange(0, events.count - 5000)];
+        }
+        
+        //save
+        saveEntries(events, getConnectionsPath());
+    }
+}
+
+//append pending connection if not already queued
+static void appendPendingConnection(NSDictionary* entry)
+{
+    @synchronized(NSFileManager.defaultManager)
+    {
+        //pending
+        NSMutableArray* pending = loadEntries(getPendingConnectionsPath());
+        
+        //de-duplicate on process + endpoint + port + protocol
+        for(NSDictionary* existing in pending)
+        {
+            if( (NSOrderedSame == [existing[KEY_PATH] caseInsensitiveCompare:entry[KEY_PATH]]) &&
+                (NSOrderedSame == [existing[KEY_ENDPOINT_ADDR] caseInsensitiveCompare:entry[KEY_ENDPOINT_ADDR]]) &&
+                (NSOrderedSame == [existing[KEY_ENDPOINT_PORT] caseInsensitiveCompare:entry[KEY_ENDPOINT_PORT]]) &&
+                ([existing[KEY_PROTOCOL] intValue] == [entry[KEY_PROTOCOL] intValue]) )
+            {
+                return;
+            }
+        }
+        
+        //append
+        [pending addObject:entry];
+        
+        //cap queue size
+        if(pending.count > 1000)
+        {
+            [pending removeObjectsInRange:NSMakeRange(0, pending.count - 1000)];
+        }
+        
+        //save
+        saveEntries(pending, getPendingConnectionsPath());
+    }
+}
 
 @implementation FilterDataProvider
 
@@ -219,6 +368,12 @@ bail:
     //flag
     BOOL csChange = NO;
     
+    //strict mode?
+    BOOL strictMode = NO;
+    
+    //silent mode?
+    BOOL silentMode = NO;
+    
     //matching rule obj
     Rule* matchingRule = nil;
     
@@ -239,6 +394,10 @@ bail:
     
     //grab console user
     consoleUser = getConsoleUser();
+    
+    //extract handling modes
+    strictMode = [preferences.preferences[PREF_STRICT_MODE] boolValue];
+    silentMode = [preferences.preferences[PREF_SILENT_MODE] boolValue];
     
     //check cache for process
     process = [self.cache objectForKey:flow.sourceAppAuditToken];
@@ -269,6 +428,9 @@ bail:
         
         //deny
         verdict = [NEFilterNewFlowVerdict dropVerdict];
+        
+        //log
+        appendConnectionEvent(makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"block", @"process_exited"));
         goto bail;
     }
     
@@ -278,6 +440,9 @@ bail:
     {
         //err msg
         os_log_error(logHandle, "ERROR: failed to create process for flow, will allow");
+        
+        //log
+        appendConnectionEvent(makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"allow", @"process_unavailable"));
         
         //bail
         goto bail;
@@ -301,6 +466,9 @@ bail:
         //dbg msg
         os_log_debug(logHandle, "current console user '%{public}@', is different than '%{public}@', so allowing flow: %{public}@", consoleUser, alerts.consoleUser, ((NEFilterSocketFlow*)flow).remoteEndpoint);
         
+        //log
+        appendConnectionEvent(makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"allow", @"console_user_changed"));
+        
         //all set
         goto bail;
     }
@@ -319,6 +487,9 @@ bail:
                 
             //allow
             verdict = [NEFilterNewFlowVerdict allowVerdict];
+            
+            //log
+            appendConnectionEvent(makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"allow", @"block_mode_allow_list"));
                 
             //all set
             goto bail;
@@ -329,6 +500,9 @@ bail:
         
         //deny
         verdict = [NEFilterNewFlowVerdict dropVerdict];
+        
+        //log
+        appendConnectionEvent(makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"block", @"block_mode"));
         
         //all set
         goto bail;
@@ -350,6 +524,9 @@ bail:
             
             //deny
             verdict = [NEFilterNewFlowVerdict dropVerdict];
+            
+            //log
+            appendConnectionEvent(makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"block", @"block_list"));
             
             //all set
             goto bail;
@@ -374,6 +551,9 @@ bail:
             
             //allow
             verdict = [NEFilterNewFlowVerdict allowVerdict];
+            
+            //log
+            appendConnectionEvent(makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"allow", @"allow_list"));
             
             //all set
             goto bail;
@@ -415,9 +595,16 @@ bail:
             
             //deny
             verdict = [NEFilterNewFlowVerdict dropVerdict];
+            
+            //log
+            appendConnectionEvent(makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"block", @"matching_rule"));
         }
         //allow (msg)
-        else os_log_debug(logHandle, "rule says: ALLOW");
+        else
+        {
+            os_log_debug(logHandle, "rule says: ALLOW");
+            appendConnectionEvent(makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"allow", @"matching_rule"));
+        }
     
         //all set
         goto bail;
@@ -442,6 +629,30 @@ bail:
         //dbg msg
         os_log_debug(logHandle, "no (saved) rule found for %d/%{public}@", process.pid, process.binary.name);
     }
+    
+    //CHECK:
+    // client in silent mode?
+    // allow, queue for later user review
+    if(YES == silentMode)
+    {
+        //entry
+        NSMutableDictionary* pendingEntry = makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"pending", @"silent_mode_pending");
+        
+        //dbg msg
+        os_log_debug(logHandle, "client in silent mode, queueing pending connection for review");
+        
+        //queue entry
+        appendPendingConnection(pendingEntry);
+        
+        //log allow event
+        appendConnectionEvent(makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"allow", @"silent_mode_pending"));
+        
+        //allow now
+        verdict = [NEFilterNewFlowVerdict allowVerdict];
+        
+        //all set
+        goto bail;
+    }
 
     //CHECK:
     // client in passive mode?
@@ -459,6 +670,9 @@ bail:
             
             //allow
             verdict = [NEFilterNewFlowVerdict allowVerdict];
+            
+            //log
+            appendConnectionEvent(makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"allow", @"passive_mode"));
         }
         
         //user action: block?
@@ -469,6 +683,9 @@ bail:
             
             //block
             verdict = [NEFilterNewFlowVerdict dropVerdict];
+            
+            //log
+            appendConnectionEvent(makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"block", @"passive_mode"));
         }
         
         //create rule?
@@ -581,7 +798,8 @@ bail:
     // Unless:
     //  a) Its on the 'graylist' (e.g. curl) as these can be (ab)used by malware
     //  b) There are other rules for this same process (even though they didn't match)
-    if(YES == [preferences.preferences[PREF_ALLOW_APPLE] boolValue])
+    if( (YES == [preferences.preferences[PREF_ALLOW_APPLE] boolValue]) &&
+        (NO == strictMode) )
     {
         //dbg msg
         os_log_debug(logHandle, "'Allow Apple' preference is set, will check if is an Apple binary");
@@ -650,6 +868,9 @@ bail:
                 
                 //tell user rules changed
                 [alerts.xpcUserClient rulesChanged];
+                
+                //log
+                appendConnectionEvent(makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"allow", @"allow_apple_baseline"));
             }
             
             //all set
@@ -667,6 +888,7 @@ bail:
     //'allow installed' check
     // if preference is enabled, item is 3rd-party, internal, and hasn't had its CS changed ...allow!
     if( (YES == [preferences.preferences[PREF_ALLOW_INSTALLED] boolValue]) &&
+        (NO == strictMode) &&
         (Apple != [process.csInfo[KEY_CS_SIGNER] intValue]) &&
         (YES != csChange) )
     {
@@ -722,6 +944,9 @@ bail:
                 //tell user rules changed
                 [alerts.xpcUserClient rulesChanged];
                 
+                //log
+                appendConnectionEvent(makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"allow", @"allow_installed_baseline"));
+                
                 //all set
                 goto bail;
             }
@@ -741,7 +966,8 @@ bail:
     
     //allow dns traffic pref set?
     // really, just any UDP traffic over port 53
-    if(YES == [preferences.preferences[PREF_ALLOW_DNS] boolValue])
+    if( (YES == [preferences.preferences[PREF_ALLOW_DNS] boolValue]) &&
+        (NO == strictMode) )
     {
         //dbg msg
         os_log_debug(logHandle, "'allow DNS traffic' is enabled, so checking port/protocol");
@@ -756,13 +982,17 @@ bail:
             //allow
             verdict = [NEFilterNewFlowVerdict allowVerdict];
             
+            //log
+            appendConnectionEvent(makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"allow", @"allow_dns"));
+            
             //done
             goto bail;
         }
     }
     
     //allow simulator apps?
-    if(YES == [preferences.preferences[PREF_ALLOW_SIMULATOR] boolValue])
+    if( (YES == [preferences.preferences[PREF_ALLOW_SIMULATOR] boolValue]) &&
+        (NO == strictMode) )
     {
         //dbg msg
         os_log_debug(logHandle, "'allow simulator apps' is enabled, so checking process");
@@ -776,6 +1006,9 @@ bail:
             //allow
             verdict = [NEFilterNewFlowVerdict allowVerdict];
             
+            //log
+            appendConnectionEvent(makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"allow", @"allow_simulator"));
+            
             //done
             goto bail;
         }
@@ -786,6 +1019,25 @@ bail:
     if( (nil == consoleUser) ||
         (nil == alerts.xpcUserClient) )
     {
+        //silent or strict mode?
+        // allow and queue for later review
+        if( (YES == silentMode) ||
+            (YES == strictMode) )
+        {
+            //entry
+            NSMutableDictionary* pendingEntry = makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"pending", @"no_user_pending");
+            
+            //dbg msg
+            os_log_debug(logHandle, "no active user/client, queueing pending connection for later review");
+            
+            //queue and log
+            appendPendingConnection(pendingEntry);
+            appendConnectionEvent(makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"allow", @"no_user_pending"));
+            
+            //all set
+            goto bail;
+        }
+        
         //dbg msg
         os_log_debug(logHandle, "no active user or no connected client, will allow (and create rule)...");
         
@@ -807,6 +1059,9 @@ bail:
         
         //tell user rules changed
         [alerts.xpcUserClient rulesChanged];
+        
+        //log
+        appendConnectionEvent(makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"allow", @"no_user_passive_rule"));
         
         //all set
         goto bail;
@@ -874,6 +1129,19 @@ bail:
             verdict = [NEFilterNewFlowVerdict dropVerdict];
         }
         
+        //log final user decision
+        appendConnectionEvent(@{
+            KEY_UUID: alert[KEY_UUID] ?: [[NSUUID UUID] UUIDString],
+            KEY_TIMESTAMP: [NSDate date],
+            KEY_PATH: alert[KEY_PATH] ?: @"",
+            KEY_PROCESS_NAME: alert[KEY_PROCESS_NAME] ?: @"",
+            KEY_ENDPOINT_ADDR: alert[KEY_ENDPOINT_ADDR] ?: @"",
+            KEY_ENDPOINT_PORT: alert[KEY_ENDPOINT_PORT] ?: @"",
+            KEY_PROTOCOL: alert[KEY_PROTOCOL] ?: @0,
+            KEY_DECISION: ((nil != alert[KEY_ACTION]) && (RULE_STATE_BLOCK == [alert[KEY_ACTION] unsignedIntValue])) ? @"block" : @"allow",
+            KEY_REASON: @"user_alert"
+        });
+        
         //resume flow w/ verdict
         [self resumeFlow:flow withVerdict:verdict];
         
@@ -895,6 +1163,7 @@ bail:
     {
         //failed to deliver
         // just allow flow...
+        appendConnectionEvent(makeConnectionEntry((NEFilterSocketFlow*)flow, process, @"allow", @"alert_delivery_failed"));
         [self resumeFlow:flow withVerdict:[NEFilterNewFlowVerdict allowVerdict]];
     }
     

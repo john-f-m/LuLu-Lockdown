@@ -31,6 +31,58 @@ extern Preferences* preferences;
 //global log handle
 extern os_log_t logHandle;
 
+//path to connection telemetry
+static NSString* getConnectionsPath(void)
+{
+    return [INSTALL_DIRECTORY stringByAppendingPathComponent:CONNECTIONS_FILE];
+}
+
+//path to pending silent-mode connections
+static NSString* getPendingConnectionsPath(void)
+{
+    return [INSTALL_DIRECTORY stringByAppendingPathComponent:PENDING_CONNECTIONS_FILE];
+}
+
+//load list entries from disk
+static NSMutableArray* loadEntries(NSString* path)
+{
+    //entries
+    NSArray* entries = [NSArray arrayWithContentsOfFile:path];
+    
+    //sanity check
+    if(YES != [entries isKindOfClass:[NSArray class]])
+    {
+        return [NSMutableArray array];
+    }
+    
+    return [entries mutableCopy];
+}
+
+//save list entries to disk
+static BOOL saveEntries(NSArray* entries, NSString* path)
+{
+    return [entries writeToFile:path atomically:YES];
+}
+
+//append a connection event
+static void appendConnectionEvent(NSDictionary* event)
+{
+    //events
+    NSMutableArray* events = loadEntries(getConnectionsPath());
+    
+    //append
+    [events addObject:event];
+    
+    //cap list size
+    if(events.count > 5000)
+    {
+        [events removeObjectsInRange:NSMakeRange(0, events.count - 5000)];
+    }
+    
+    //save
+    saveEntries(events, getConnectionsPath());
+}
+
 @implementation XPCDaemon
 
 //send preferences to the client
@@ -89,6 +141,192 @@ extern os_log_t logHandle;
     //reply w/ rules
     reply(archivedRules);
            
+    return;
+}
+
+//send connection telemetry to the client
+-(void)getConnectionEvents:(void (^)(NSArray*))reply
+{
+    //dbg msg
+    os_log_debug(logHandle, "XPC request: '%s'", __PRETTY_FUNCTION__);
+    
+    //reply
+    reply(loadEntries(getConnectionsPath()));
+    
+    return;
+}
+
+//send pending connections to client
+-(void)getPendingConnections:(void (^)(NSArray*))reply
+{
+    //dbg msg
+    os_log_debug(logHandle, "XPC request: '%s'", __PRETTY_FUNCTION__);
+    
+    //reply
+    reply(loadEntries(getPendingConnectionsPath()));
+    
+    return;
+}
+
+//resolve pending connection by creating a rule and removing queue item
+-(void)resolvePendingConnection:(NSString*)uuid action:(NSNumber*)action reply:(void (^)(BOOL))reply
+{
+    //result
+    BOOL resolved = NO;
+    
+    //pending entries
+    NSMutableArray* pending = nil;
+    
+    //matched entry
+    NSMutableDictionary* entry = nil;
+    
+    //match index
+    NSUInteger index = NSNotFound;
+    
+    //rule info
+    NSMutableDictionary* ruleInfo = nil;
+    
+    //uuid invalid?
+    if(0 == uuid.length)
+    {
+        goto bail;
+    }
+    
+    //default action
+    if(nil == action)
+    {
+        action = @RULE_STATE_ALLOW;
+    }
+    
+    //load pending entries
+    pending = loadEntries(getPendingConnectionsPath());
+    
+    //find matching entry
+    for(NSUInteger i = 0; i < pending.count; i++)
+    {
+        NSString* pendingUUID = pending[i][KEY_UUID];
+        if( (0 != pendingUUID.length) &&
+            (NSOrderedSame == [pendingUUID caseInsensitiveCompare:uuid]) )
+        {
+            entry = [pending[i] mutableCopy];
+            index = i;
+            break;
+        }
+    }
+    
+    //not found?
+    if(nil == entry)
+    {
+        goto bail;
+    }
+    
+    //init rule info
+    if(0 == [entry[KEY_PATH] length])
+    {
+        goto bail;
+    }
+    
+    ruleInfo = [@{KEY_PATH:entry[KEY_PATH], KEY_ACTION:action, KEY_TYPE:@RULE_TYPE_USER} mutableCopy];
+    
+    //retain endpoint details when available
+    if(0 != [entry[KEY_ENDPOINT_ADDR] length])
+    {
+        ruleInfo[KEY_ENDPOINT_ADDR] = entry[KEY_ENDPOINT_ADDR];
+    }
+    if(0 != [entry[KEY_ENDPOINT_PORT] length])
+    {
+        ruleInfo[KEY_ENDPOINT_PORT] = entry[KEY_ENDPOINT_PORT];
+    }
+    if(nil != entry[KEY_PROTOCOL])
+    {
+        ruleInfo[KEY_PROTOCOL] = entry[KEY_PROTOCOL];
+    }
+    
+    //retain code-signing details when available
+    if(nil != entry[KEY_CS_INFO])
+    {
+        ruleInfo[KEY_CS_INFO] = entry[KEY_CS_INFO];
+    }
+    
+    //if endpoint data is missing, fall back to process-wide rule
+    if( (0 == [entry[KEY_ENDPOINT_ADDR] length]) &&
+        (0 == [entry[KEY_ENDPOINT_PORT] length]) )
+    {
+        ruleInfo[KEY_SCOPE] = @(ACTION_SCOPE_PROCESS);
+    }
+    
+    //create/save rule
+    if(YES != [rules add:[[Rule alloc] init:ruleInfo] save:YES])
+    {
+        goto bail;
+    }
+    
+    //remove pending entry and save
+    [pending removeObjectAtIndex:index];
+    if(YES != saveEntries(pending, getPendingConnectionsPath()))
+    {
+        goto bail;
+    }
+    
+    //append resolved connection event
+    appendConnectionEvent(@{
+        KEY_UUID: entry[KEY_UUID] ?: [[NSUUID UUID] UUIDString],
+        KEY_TIMESTAMP: [NSDate date],
+        KEY_PATH: entry[KEY_PATH] ?: @"",
+        KEY_PROCESS_NAME: entry[KEY_PROCESS_NAME] ?: @"",
+        KEY_ENDPOINT_ADDR: entry[KEY_ENDPOINT_ADDR] ?: @"",
+        KEY_ENDPOINT_PORT: entry[KEY_ENDPOINT_PORT] ?: @"",
+        KEY_PROTOCOL: entry[KEY_PROTOCOL] ?: @0,
+        KEY_DECISION: (RULE_STATE_BLOCK == action.intValue) ? @"block" : @"allow",
+        KEY_REASON: @"pending_review"
+    });
+    
+    //tell user rules changed
+    [alerts.xpcUserClient rulesChanged];
+    
+    //happy
+    resolved = YES;
+    
+bail:
+    
+    reply(resolved);
+    
+    return;
+}
+
+//delete pending connection without creating rule
+-(void)deletePendingConnection:(NSString*)uuid reply:(void (^)(BOOL))reply
+{
+    //result
+    BOOL deleted = NO;
+    
+    //pending entries
+    NSMutableArray* pending = nil;
+    
+    //load pending
+    pending = loadEntries(getPendingConnectionsPath());
+    
+    //find/remove
+    for(NSUInteger i = 0; i < pending.count; i++)
+    {
+        NSString* pendingUUID = pending[i][KEY_UUID];
+        if( (0 != pendingUUID.length) &&
+            (NSOrderedSame == [pendingUUID caseInsensitiveCompare:uuid]) )
+        {
+            [pending removeObjectAtIndex:i];
+            deleted = YES;
+            break;
+        }
+    }
+    
+    //save if changed
+    if(YES == deleted)
+    {
+        deleted = saveEntries(pending, getPendingConnectionsPath());
+    }
+    
+    reply(deleted);
+    
     return;
 }
 

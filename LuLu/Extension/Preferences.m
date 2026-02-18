@@ -167,6 +167,30 @@ bail:
         //add in (new) prefs
         [self.preferences addEntriesFromDictionary:updates];
     }
+    
+    //strict mode enabled?
+    // disable silent/passive modes to avoid conflicting behavior
+    if(YES == [self.preferences[PREF_STRICT_MODE] boolValue])
+    {
+        self.preferences[PREF_SILENT_MODE] = @NO;
+        self.preferences[PREF_PASSIVE_MODE] = @NO;
+    }
+    
+    //silent mode enabled?
+    // disable strict/passive modes to avoid conflicting behavior
+    if(YES == [self.preferences[PREF_SILENT_MODE] boolValue])
+    {
+        self.preferences[PREF_STRICT_MODE] = @NO;
+        self.preferences[PREF_PASSIVE_MODE] = @NO;
+    }
+    
+    //passive mode enabled?
+    // disable strict/silent modes
+    if(YES == [self.preferences[PREF_PASSIVE_MODE] boolValue])
+    {
+        self.preferences[PREF_STRICT_MODE] = @NO;
+        self.preferences[PREF_SILENT_MODE] = @NO;
+    }
         
     //save
     if(YES != [self save])

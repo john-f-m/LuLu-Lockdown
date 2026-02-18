@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LuLu-Lockdown</title>
+  <meta name="description" content="LuLu-Lockdown: a combined macOS firewall platform with strict/silent decision modes, telemetry, map-based traffic insights, and Lockdown-style bad actor imports." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Chakra+Petch:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0b1728;
+      --ink-soft: #3c4a61;
+      --panel: rgba(255, 255, 255, 0.88);
+      --line: rgba(11, 23, 40, 0.12);
+      --accent: #0077ff;
+      --accent-2: #00c5c8;
+      --accent-3: #ff7a00;
+      --bg-1: #dff4ff;
+      --bg-2: #f3fbff;
+      --bg-3: #fef8ef;
+      --radius: 18px;
+      --shadow: 0 18px 40px rgba(0, 31, 72, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "Sora", "Avenir Next", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 8% 14%, rgba(0, 119, 255, 0.18), transparent 34%),
+        radial-gradient(circle at 86% 8%, rgba(0, 197, 200, 0.16), transparent 28%),
+        radial-gradient(circle at 92% 88%, rgba(255, 122, 0, 0.12), transparent 24%),
+        linear-gradient(160deg, var(--bg-1), var(--bg-2) 48%, var(--bg-3));
+      min-height: 100vh;
+    }
+
+    .frame {
+      width: min(1120px, 92vw);
+      margin: 0 auto;
+      padding: 42px 0 64px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: linear-gradient(150deg, rgba(255,255,255,0.92), rgba(241,250,255,0.88));
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 44px;
+    }
+
+    .noise {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: radial-gradient(rgba(11,23,40,0.08) 0.65px, transparent 0.65px);
+      background-size: 8px 8px;
+      mix-blend-mode: soft-light;
+      opacity: 0.35;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: "Chakra Petch", sans-serif;
+      letter-spacing: 0.08em;
+      font-size: 12px;
+      text-transform: uppercase;
+      color: #0152c2;
+      background: rgba(0, 119, 255, 0.1);
+      border: 1px solid rgba(0, 119, 255, 0.24);
+      border-radius: 999px;
+      padding: 8px 12px;
+    }
+
+    h1 {
+      margin: 18px 0 10px;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      line-height: 1.05;
+      max-width: 12ch;
+    }
+
+    .sub {
+      margin: 0;
+      color: var(--ink-soft);
+      max-width: 58ch;
+      line-height: 1.65;
+      font-size: 1rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+
+    .btn-main {
+      color: #fff;
+      background: linear-gradient(130deg, var(--accent), #0052d9);
+      box-shadow: 0 10px 28px rgba(0, 80, 220, 0.28);
+    }
+
+    .btn-sub {
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.9);
+      border-color: rgba(11, 23, 40, 0.16);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 20px rgba(0, 24, 56, 0.08);
+      padding: 18px;
+    }
+
+    .span-6 { grid-column: span 6; }
+    .span-4 { grid-column: span 4; }
+    .span-8 { grid-column: span 8; }
+
+    .k {
+      margin: 0;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      font-family: "Chakra Petch", sans-serif;
+      color: #1460c7;
+    }
+
+    .v {
+      margin: 8px 0 0;
+      font-size: 1.03rem;
+      line-height: 1.5;
+    }
+
+    .section {
+      margin-top: 26px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.76);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .section h2 {
+      margin: 0 0 14px;
+      font-size: clamp(1.2rem, 3vw, 1.8rem);
+    }
+
+    .feature-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .feature {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      background: rgba(255,255,255,0.84);
+    }
+
+    .feature h3 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+
+    .feature p {
+      margin: 0;
+      color: var(--ink-soft);
+      line-height: 1.55;
+      font-size: 0.95rem;
+    }
+
+    .pulse {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 10px;
+    }
+
+    .pulse .dot {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.9);
+      padding: 10px;
+      font-family: "Chakra Petch", sans-serif;
+      font-size: 0.9rem;
+      color: #16365e;
+    }
+
+    footer {
+      margin-top: 24px;
+      font-size: 0.9rem;
+      color: #4a5d7c;
+    }
+
+    @media (max-width: 900px) {
+      .hero { padding: 26px; }
+      .span-6, .span-8, .span-4 { grid-column: span 12; }
+      .feature-grid { grid-template-columns: 1fr; }
+      .pulse { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="frame">
+    <section class="hero">
+      <div class="noise"></div>
+      <div class="tag">LuLu-Lockdown • macOS Firewall Platform</div>
+      <h1>Connection Control With Full Visibility</h1>
+      <p class="sub">
+        LuLu-Lockdown combines LuLu’s app-aware firewall pipeline with Lockdown-inspired list workflows and telemetry.
+        You can run strict per-connection decisioning, queue in silent mode, and inspect where outbound traffic is going.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-main" href="../README.md">Read Full README</a>
+        <a class="btn btn-sub" href="https://github.com/john-f-m/LuLu-Lockdown">Open Repository</a>
+        <a class="btn btn-sub" href="https://github.com/confirmedcode/Lockdown-Mac">Lockdown-Mac Reference</a>
+      </div>
+
+      <div class="grid">
+        <article class="card span-6">
+          <p class="k">Maintainer</p>
+          <p class="v"><strong>john-f-m</strong></p>
+        </article>
+        <article class="card span-6">
+          <p class="k">Build Foundation</p>
+          <p class="v">LuLu architecture + Lockdown-Mac-inspired feature set</p>
+        </article>
+        <article class="card span-4">
+          <p class="k">Mode 1</p>
+          <p class="v">Strict interactive decisions for every new or changed connection</p>
+        </article>
+        <article class="card span-4">
+          <p class="k">Mode 2</p>
+          <p class="v">Silent queue mode with later allow/block conversion</p>
+        </article>
+        <article class="card span-4">
+          <p class="k">Mode 3</p>
+          <p class="v">Passive mode remains available for compatibility</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Feature Highlights</h2>
+      <div class="feature-grid">
+        <article class="feature">
+          <h3>Startup Baseline Choice</h3>
+          <p>Choose recommended baseline allowances or initialize from zero on first run.</p>
+        </article>
+        <article class="feature">
+          <h3>Pending Queue Review</h3>
+          <p>Step through queued connections and produce persistent allow/block rules.</p>
+        </article>
+        <article class="feature">
+          <h3>Traffic Insights</h3>
+          <p>Generate protocol and port graphs, a recent-activity table, and global destination markers.</p>
+        </article>
+        <article class="feature">
+          <h3>Bad Actor Feed Import</h3>
+          <p>Import curated Lockdown-Mac list feeds and apply them as LuLu global block lists.</p>
+        </article>
+      </div>
+
+      <div class="pulse">
+        <div class="dot">Telemetry Fields: app, endpoint, port, protocol, decision, reason, timestamp</div>
+        <div class="dot">Pages Entry Point: <code>docs/index.html</code></div>
+        <div class="dot">License: GPL-3.0</div>
+      </div>
+    </section>
+
+    <footer>
+      LuLu-Lockdown • GitHub Pages source folder: <code>/docs</code>
+    </footer>
+  </main>
+</body>
+</html>

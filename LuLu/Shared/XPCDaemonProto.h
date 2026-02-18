@@ -20,6 +20,18 @@
 //get rules
 -(void)getRules:(void (^)(NSData*))reply;
 
+//get recent connection telemetry
+-(void)getConnectionEvents:(void (^)(NSArray*))reply;
+
+//get pending (silent mode) connections
+-(void)getPendingConnections:(void (^)(NSArray*))reply;
+
+//resolve pending connection by creating a rule and removing it from queue
+-(void)resolvePendingConnection:(NSString*)uuid action:(NSNumber*)action reply:(void (^)(BOOL))reply;
+
+//delete pending connection (without creating a rule)
+-(void)deletePendingConnection:(NSString*)uuid reply:(void (^)(BOOL))reply;
+
 //add rule
 -(void)addRule:(NSDictionary*)info;
 
