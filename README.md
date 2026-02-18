@@ -59,6 +59,12 @@ This project extends LuLu with stricter connection decision workflows, silent re
 - Pulls and merges curated Lockdown-Mac feed files into a local block list file.
 - Automatically enables LuLu global block-list mode with imported entries.
 
+### Social Media Block
+
+- Added `Social Media Block` functionality.
+- Currently supports `Block Meta (Facebook, Instagram, WhatsApp)` to block Meta-owned domains and IP prefixes (with CIDR matching).
+- More social media platforms scheduled for upcoming releases.
+
 ## Lockdown-Mac integration references
 
 This combined branch draws from publicly available Lockdown-Mac feature concepts and list feeds:
