@@ -10,152 +10,155 @@
 @import Cocoa;
 @import OSLog;
 
-#import "XPCDaemonClient.h"
 #import "UpdateWindowController.h"
+#import "XPCDaemonClient.h"
 
 /* CONSTS */
 
-//rules view
+// rules view
 #define TOOLBAR_RULES 0
 
-//modes view
+// modes view
 #define TOOLBAR_MODES 1
 
-//update view
+// update view
 #define TOOLBAR_LISTS 2
 
-//profiles view
+// profiles view
 #define TOOLBAR_PROFILES 3
 
-//update view
+// update view
 #define TOOLBAR_UPDATE 4
 
-//to select, need string ID
+// to select, need string ID
 #define TOOLBAR_RULES_ID @"Rules"
 #define TOOLBAR_PROFILES_ID @"Profiles"
 
-@interface PrefsWindowController : NSWindowController <NSWindowDelegate, NSTableViewDelegate, NSTableViewDataSource>
+@interface PrefsWindowController
+    : NSWindowController <NSWindowDelegate, NSTableViewDelegate,
+                          NSTableViewDataSource>
 
 /* PROPERTIES */
 
-//preferences
-@property(nonatomic, retain)NSDictionary* preferences;
+// preferences
+@property(nonatomic, retain) NSDictionary *preferences;
 
-//toolbar
-@property (weak) IBOutlet NSToolbar* toolbar;
+// toolbar
+@property(weak) IBOutlet NSToolbar *toolbar;
 
 /* RULES */
 
-//rules prefs view
-@property (weak) IBOutlet NSView* rulesView;
+// rules prefs view
+@property(weak) IBOutlet NSView *rulesView;
 
-//show rules button
-@property (weak) IBOutlet NSButton* showRulesButton;
+// show rules button
+@property(weak) IBOutlet NSButton *showRulesButton;
 
 /* MODES */
 
-//modes view
-@property (strong) IBOutlet NSView* modesView;
+// modes view
+@property(strong) IBOutlet NSView *modesView;
 
-//passive mode action ...allow or block?
-@property (weak) IBOutlet NSPopUpButton* passiveModeAction;
+// passive mode action ...allow or block?
+@property(weak) IBOutlet NSPopUpButton *passiveModeAction;
 
-//passive mode rules ...create, or not?
-@property (weak) IBOutlet NSPopUpButton* passiveModeRules;
+// passive mode rules ...create, or not?
+@property(weak) IBOutlet NSPopUpButton *passiveModeRules;
 
 //(block/allow) lists view
-@property (strong) IBOutlet NSView *listsView;
+@property(strong) IBOutlet NSView *listsView;
 
-//allow list
-@property (weak) IBOutlet NSTextField *allowList;
+// allow list
+@property(weak) IBOutlet NSTextField *allowList;
 
-//select allow list button
-@property (weak) IBOutlet NSButton *selectAllowListButton;
+// select allow list button
+@property(weak) IBOutlet NSButton *selectAllowListButton;
 
-//block list
-@property (weak) IBOutlet NSTextField* blockList;
+// block list
+@property(weak) IBOutlet NSTextField *blockList;
 
-//select block list button
-@property (weak) IBOutlet NSButton* selectBlockListButton;
+// select block list button
+@property(weak) IBOutlet NSButton *selectBlockListButton;
 
-//profiles table
-@property (weak) IBOutlet NSTableView *profilesTable;
+// profiles table
+@property(weak) IBOutlet NSTableView *profilesTable;
 
 /* PROFILES VIEW */
 
-//profiles view
-@property (strong) IBOutlet NSView* profilesView;
+// profiles view
+@property(strong) IBOutlet NSView *profilesView;
 
-//profiles
-@property(nonatomic, retain)NSMutableArray* profiles;
+// profiles
+@property(nonatomic, retain) NSMutableArray *profiles;
 
-//selected profile
-@property(nonatomic, retain)NSString* selectedProfile;
+// selected profile
+@property(nonatomic, retain) NSString *selectedProfile;
 
-//add profile sheet
-@property (strong) IBOutlet NSPanel* addProfileSheet;
+// add profile sheet
+@property(strong) IBOutlet NSPanel *addProfileSheet;
 
-//continue/next button
-@property (weak) IBOutlet NSButton* continueProfileButton;
+// continue/next button
+@property(weak) IBOutlet NSButton *continueProfileButton;
 
-//current view
-@property (strong) NSView* currentProfileSubview;
+// current view
+@property(strong) NSView *currentProfileSubview;
 
-//profile name label
-@property (weak) IBOutlet NSTextField* profileNameLabel;
+// profile name label
+@property(weak) IBOutlet NSTextField *profileNameLabel;
 
-//profile name view
-@property (strong) IBOutlet NSView* profileNameView;
+// profile name view
+@property(strong) IBOutlet NSView *profileNameView;
 
-//new profile name
-@property(nonatomic, retain)NSString* profileName;
+// new profile name
+@property(nonatomic, retain) NSString *profileName;
 
-//profile preferences
-@property(nonatomic, retain)NSMutableDictionary* profilePreferences;
+// profile preferences
+@property(nonatomic, retain) NSMutableDictionary *profilePreferences;
 
-//profile views
-enum profileViews
-{
-    profileName = 0,
-    profileRules,
-    profileModes,
-    profileLists,
-    profileUpdates,
+// profile views
+enum profileViews {
+  profileName = 0,
+  profileRules,
+  profileModes,
+  profileLists,
+  profileUpdates,
 };
 
 /* UPDATE VIEW */
 
-//update view
-@property (weak) IBOutlet NSView* updateView;
+// update view
+@property(weak) IBOutlet NSView *updateView;
 
-//update button
-@property (weak) IBOutlet NSButton* updateButton;
+// update button
+@property(weak) IBOutlet NSButton *updateButton;
 
-//update indicator (spinner)
-@property (weak) IBOutlet NSProgressIndicator* updateIndicator;
+// update indicator (spinner)
+@property(weak) IBOutlet NSProgressIndicator *updateIndicator;
 
-//update label
-@property (weak) IBOutlet NSTextField* updateLabel;
+// update label
+@property(weak) IBOutlet NSTextField *updateLabel;
 
-//update window controller
-@property(nonatomic, retain)UpdateWindowController* updateWindowController;
+// update window controller
+@property(nonatomic, retain) UpdateWindowController *updateWindowController;
 
-//added view
-@property (nonatomic) BOOL viewWasAdded;
+// meta block button
+@property(nonatomic, retain) NSButton *metaBlockButton;
 
+// added view
+@property(nonatomic) BOOL viewWasAdded;
 
 /* METHODS */
 
-//toolbar button handler
--(IBAction)toolbarButtonHandler:(id)sender;
+// toolbar button handler
+- (IBAction)toolbarButtonHandler:(id)sender;
 
-//switch to tab
--(void)switchTo:(NSString*)itemID;
+// switch to tab
+- (void)switchTo:(NSString *)itemID;
 
-//button handler for all preference buttons
--(IBAction)togglePreference:(id)sender;
+// button handler for all preference buttons
+- (IBAction)togglePreference:(id)sender;
 
-//reload UI
--(void)reload;
+// reload UI
+- (void)reload;
 
 @end

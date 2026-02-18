@@ -9,6 +9,7 @@
 @import Cocoa;
 @import OSLog;
 @import NetworkExtension;
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -16,31 +17,36 @@ NS_ASSUME_NONNULL_BEGIN
 
 /* PROPERTIES */
 
-//path
-@property(nonatomic, retain)NSString* path;
+// path
+@property(nonatomic, retain) NSString *path;
 
-//block list
-@property(nonatomic, retain)NSMutableSet* items;
+// block list
+@property(nonatomic, retain) NSMutableSet *items;
 
-//modification time
-@property(nonatomic, retain)NSDate* lastModified;
+// ip prefixes (CIDR)
+@property(nonatomic, retain) NSMutableSet *ipPrefixes;
 
+// modification time
+@property(nonatomic, retain) NSDate *lastModified;
 
 /* METHODS */
 
-//init
-// with a path
--(id)init:(NSString*)path;
+// init
+//  with a path
+- (id)init:(NSString *)path;
 
 //(re)load from disk
--(void)load:(NSString*)path;
+- (void)load:(NSString *)path;
 
-//should reload
-// checks file modification time
--(BOOL)shouldReload;
+// should reload
+//  checks file modification time
+- (BOOL)shouldReload;
 
-//check if flow matches item on block list
--(BOOL)isMatch:(NEFilterSocketFlow*)flow;
+// add from file
+- (void)addFromFile:(NSString *)path;
+
+// check if flow matches item on block or allow list
+- (BOOL)isMatch:(NEFilterSocketFlow *)flow;
 
 @end
 

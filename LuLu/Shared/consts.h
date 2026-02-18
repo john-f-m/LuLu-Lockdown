@@ -189,6 +189,9 @@ enum Signer{None, Apple, AppStore, DevID, AdHoc};
 //global block list
 #define PREF_BLOCK_LIST @"blockList"
 
+//meta block
+#define PREF_META_BLOCK @"metaBlock"
+
 //prefs
 // current profile
 #define PREF_CURRENT_PROFILE @"currentProfile"

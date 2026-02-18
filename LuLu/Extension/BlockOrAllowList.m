@@ -6,295 +6,363 @@
 //  Copyright © 2020 Objective-See. All rights reserved.
 //
 
-#import "consts.h"
-#import "Preferences.h"
 #import "BlockOrAllowList.h"
+#import "Preferences.h"
+#import "consts.h"
+
+#import <arpa/inet.h>
+#import <sys/socket.h>
 
 /* GLOBALS */
 
-//log handle
+// log handle
 extern os_log_t logHandle;
 
-//preferences
-extern Preferences* preferences;
+// preferences
+extern Preferences *preferences;
 
 @implementation BlockOrAllowList
 
--(id)init:(NSString*)path
-{
-    //init super
-    self = [super init];
-    if(nil != self)
-    {
-        //save list
-        self.path = path;
-        
-        //load
-        [self load:self.path];
-    }
-    
-    return self;
+- (id)init:(NSString *)path {
+  // init super
+  self = [super init];
+  if (nil != self) {
+    // alloc
+    self.items = [NSMutableSet set];
+    self.ipPrefixes = [NSMutableSet set];
+
+    // save list
+    self.path = path;
+
+    // load
+    [self load:self.path];
+  }
+
+  return self;
 }
 
-//was specified block list remote
-// ...just checks if prefixed with http:// || https://
--(BOOL)isRemote
-{
-    //specified path a URL?
-    return ((YES == [self.path hasPrefix:@"http://"]) || (YES == [self.path hasPrefix:@"https://"]));
+// was specified block list remote
+//  ...just checks if prefixed with http:// || https://
+- (BOOL)isRemote {
+  // specified path a URL?
+  return ((YES == [self.path hasPrefix:@"http://"]) ||
+          (YES == [self.path hasPrefix:@"https://"]));
 }
 
-//should reload
-// checks file modification time
--(BOOL)shouldReload
-{
-    //flag
-    BOOL shouldReload = NO;
-    
-    //current mod. time
-    NSDate* modified = nil;
-    
-    //if it's remote
-    // can't tell, so default to no
-    if(YES == [self isRemote])
-    {
-        //bail
-        goto bail;
-    }
-    
-    //get modified timestamp
-    modified = [[NSFileManager.defaultManager attributesOfItemAtPath:self.path error:nil] objectForKey:NSFileModificationDate];
+// should reload
+//  checks file modification time
+- (BOOL)shouldReload {
+  // flag
+  BOOL shouldReload = NO;
 
-    //was file modified?
-    if(NSOrderedDescending == [modified compare:self.lastModified])
-    {
-        //dbg msg
-        os_log_debug(logHandle, "block list was modified ...will reload");
-        
-        //yes
-        shouldReload = YES;
-    }
-    
+  // current mod. time
+  NSDate *modified = nil;
+
+  // if it's remote
+  //  can't tell, so default to no
+  if (YES == [self isRemote]) {
+    // bail
+    goto bail;
+  }
+
+  // get modified timestamp
+  modified = [[NSFileManager.defaultManager attributesOfItemAtPath:self.path
+                                                             error:nil]
+      objectForKey:NSFileModificationDate];
+
+  // was file modified?
+  if (NSOrderedDescending == [modified compare:self.lastModified]) {
+    // dbg msg
+    os_log_debug(logHandle, "block list was modified ...will reload");
+
+    // yes
+    shouldReload = YES;
+  }
+
 bail:
-    
-    return shouldReload;
+
+  return shouldReload;
 }
 
 //(re)load
--(void)load:(NSString*)path
-{
-    //error
-    NSError* error = nil;
-    
-    //file contents
-    NSString* list = nil;
-    
-    //sync
-    @synchronized (self) {
-        
-    //update path
+- (void)load:(NSString *)path {
+  // error
+  NSError *error = nil;
+
+  // file contents
+  NSString *list = nil;
+
+  // sync
+  @synchronized(self) {
+
+    // update path
     self.path = path;
-        
-    //reset list
+
+    // reset lists
     [self.items removeAllObjects];
-        
-    //dbg msg
+    [self.ipPrefixes removeAllObjects];
+
+    // dbg msg
     os_log_debug(logHandle, "%s", __PRETTY_FUNCTION__);
-    
-    //check
-    // path?
-    if(0 == self.path.length)
-    {
-        //dbg msg
-        os_log_debug(logHandle, "no list specified...");
-        
-        //bail
-        goto bail;
+
+    // check
+    //  path?
+    if (0 == self.path.length) {
+      // dbg msg
+      os_log_debug(logHandle, "no list specified...");
+
+      // bail
+      goto bail;
     }
-        
-    //remote?
-    // load via URL
-    if(YES == [self isRemote])
-    {
-        //dbg msg
-        os_log_debug(logHandle, "(re)loading (remote) list");
-        
-        //load
-        list = [NSString stringWithContentsOfURL:[NSURL URLWithString:self.path] encoding:NSUTF8StringEncoding error:&error];
-        if(nil != error)
-        {
-            //err msg
-            os_log_error(logHandle, "ERROR: failed to (re)load (remote) list, %{public}@ (error: %{public}@)", self.path, error);
-            
-            //bail
-            goto bail;
-        }
-        
-        //(re)load remote URL once a day
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(24 * 60 * 60 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-            
-            //dbg msg
+
+    // remote?
+    //  load via URL
+    if (YES == [self isRemote]) {
+      // dbg msg
+      os_log_debug(logHandle, "(re)loading (remote) list");
+
+      // load
+      list = [NSString stringWithContentsOfURL:[NSURL URLWithString:self.path]
+                                      encoding:NSUTF8StringEncoding
+                                         error:&error];
+      if (nil != error) {
+        // err msg
+        os_log_error(logHandle,
+                     "ERROR: failed to (re)load (remote) list, %{public}@ "
+                     "(error: %{public}@)",
+                     self.path, error);
+
+        // bail
+        goto bail;
+      }
+
+      // split and add to list
+      [self addItemsFromString:list];
+
+      //(re)load remote URL once a day
+      dispatch_after(
+          dispatch_time(DISPATCH_TIME_NOW,
+                        (int64_t)(24 * 60 * 60 * NSEC_PER_SEC)),
+          dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+            // dbg msg
             os_log_debug(logHandle, "(re)loading (remote) list");
-            
+
             //(re)load
             [self load:self.path];
-            
-        });
+          });
     }
-    
-    //local file
-    // check and load
-    else
-    {
-        //dbg msg
-        os_log_debug(logHandle, "(re)loading (local) list, %{public}@", self.path);
-            
-        //(re)load
-        list = [NSString stringWithContentsOfFile:self.path encoding:NSUTF8StringEncoding error:&error];
-        if(nil != error)
-        {
-            //err msg
-            os_log_error(logHandle, "ERROR: failed to (re)load (local) list, %{public}@ (error: %{public}@)", self.path, error);
-            
-            //bail
-            goto bail;
-        }
-        
-        //save timestamp
-        self.lastModified = [[NSFileManager.defaultManager attributesOfItemAtPath:self.path error:nil] objectForKey:NSFileModificationDate];
+
+    // local file
+    //  check and load
+    else {
+      // dbg msg
+      os_log_debug(logHandle, "(re)loading (local) list, %{public}@",
+                   self.path);
+
+      // (re)load
+      [self addFromFile:path];
+
+      // save timestamp
+      self.lastModified = [[NSFileManager.defaultManager
+          attributesOfItemAtPath:self.path
+                           error:nil] objectForKey:NSFileModificationDate];
     }
-    
-    //init set
-    // of trimmed/lower-cased items
-    self.items = [NSMutableSet setWithArray:[[[list componentsSeparatedByString:@"\n"] filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(NSString *item, NSDictionary *bindings) {
-                //trim
-                NSString* trimmed = [item stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-                
-                //make sure its not empty/not a comment
-                return (trimmed.length > 0 && ![trimmed hasPrefix:@"#"]);
-        
-            }]] valueForKey:@"lowercaseString"]];
-        
-    //dbg msg
-    os_log_debug(logHandle, "(re)loaded %lu list items", (unsigned long)self.items.count);
-    
-    } //sync
+  } // sync
 
 bail:
-    
-    return;
+
+  return;
 }
 
-//check if flow matches item on block or allow list
-// note: currently lists don't support port matching
--(BOOL)isMatch:(NEFilterSocketFlow*)flow
-{
-    //match
-    BOOL isMatch = NO;
-    
-    //remote endpoint
-    NWHostEndpoint* remoteEndpoint = nil;
-    
-    //endpoint url/hosts
-    NSMutableSet* endpointNames = nil;
-    
-    //matches
-    NSSet* matches = nil;
-    
-    //extract remote endpoint
-    remoteEndpoint = (NWHostEndpoint*)flow.remoteEndpoint;
-    
-    //need to reload list?
-    // checks timestamp to see if modified
-    if(YES == [self shouldReload])
-    {
-        //(re)load list
-        [self load:self.path];
+// add from file
+- (void)addFromFile:(NSString *)path {
+  // error
+  NSError *error = nil;
+
+  // file contents
+  NSString *list = nil;
+
+  // dbg msg
+  os_log_debug(logHandle, "adding from file, %{public}@", path);
+
+  // load
+  list = [NSString stringWithContentsOfFile:path
+                                   encoding:NSUTF8StringEncoding
+                                      error:&error];
+  if (nil != error) {
+    // err msg
+    os_log_error(logHandle,
+                 "ERROR: failed to load file, %{public}@ (error: %{public}@)",
+                 path, error);
+    return;
+  }
+
+  // sync
+  @synchronized(self) {
+    [self addItemsFromString:list];
+  } // sync
+
+  return;
+}
+
+// add items from string
+- (void)addItemsFromString:(NSString *)list {
+  // split and add to list
+  for (NSString *item in
+       [list componentsSeparatedByCharactersInSet:[NSCharacterSet
+                                                      newlineCharacterSet]]) {
+    // clean
+    NSString *cleaned =
+        [item stringByTrimmingCharactersInSet:[NSCharacterSet
+                                                  whitespaceCharacterSet]];
+
+    // skip blank or comments
+    if ((0 == cleaned.length) || (YES == [cleaned hasPrefix:@"#"])) {
+      continue;
     }
-    
-    //sync
-    @synchronized (self) {
-        
-    //init endpoint names
+
+    // CIDR?
+    if ([cleaned containsString:@"/"]) {
+      [self.ipPrefixes addObject:cleaned];
+    } else {
+      [self.items addObject:cleaned.lowercaseString];
+    }
+  }
+
+  // dbg msg
+  os_log_debug(logHandle, "(re)loaded %lu items and %lu prefixes",
+               (unsigned long)self.items.count,
+               (unsigned long)self.ipPrefixes.count);
+}
+
+// check if flow matches item on block or allow list
+//  note: currently lists don't support port matching
+- (BOOL)isMatch:(NEFilterSocketFlow *)flow {
+  // match
+  BOOL isMatch = NO;
+
+  // remote endpoint
+  NWHostEndpoint *remoteEndpoint = nil;
+
+  // endpoint url/hosts
+  NSMutableSet *endpointNames = nil;
+
+  // matches
+  NSSet *matches = nil;
+
+  // extract remote endpoint
+  remoteEndpoint = (NWHostEndpoint *)flow.remoteEndpoint;
+
+  // need to reload list?
+  //  checks timestamp to see if modified
+  if (YES == [self shouldReload]) {
+    //(re)load list
+    [self load:self.path];
+  }
+
+  // sync
+  @synchronized(self) {
+
+    // init endpoint names
     endpointNames = [NSMutableSet set];
-        
-    //add url
-    if(nil != flow.URL.absoluteString)
-    {
-        //add full url
-        [endpointNames addObject:flow.URL.absoluteString.lowercaseString];
+
+    // add url
+    if (nil != flow.URL.absoluteString) {
+      // add full url
+      [endpointNames addObject:flow.URL.absoluteString.lowercaseString];
     }
-    
-    //add host
-    if(nil != flow.URL.host)
-    {
-        //add full url
-        [endpointNames addObject:flow.URL.host.lowercaseString];
+
+    // add host
+    if (nil != flow.URL.host) {
+      // add full url
+      [endpointNames addObject:flow.URL.host.lowercaseString];
     }
-        
-    //add host name
-    if(nil != remoteEndpoint.hostname)
-    {
-        //add
-        [endpointNames addObject:remoteEndpoint.hostname.lowercaseString];
+
+    // add host name
+    if (nil != remoteEndpoint.hostname) {
+      // add
+      [endpointNames addObject:remoteEndpoint.hostname.lowercaseString];
     }
-    
-    //macOS 11+?
-    // add remote host name
-    if(@available(macOS 11, *))
-    {
-        //add remote host name
-        if(nil != flow.remoteHostname)
-        {
-            //add
-            [endpointNames addObject:flow.remoteHostname.lowercaseString];
-         
-            //if it starts w/ 'www.'
-            // strip and add that too
-            if(YES == [flow.remoteHostname hasPrefix:@"www."])
-            {
-                //add
-                [endpointNames addObject:[[flow.remoteHostname substringFromIndex:4] lowercaseString]];
-            }
+
+    // macOS 11+?
+    //  add remote host name
+    if (@available(macOS 11, *)) {
+      // add remote host name
+      if (nil != flow.remoteHostname) {
+        // add
+        [endpointNames addObject:flow.remoteHostname.lowercaseString];
+
+        // if it starts w/ 'www.'
+        //  strip and add that too
+        if (YES == [flow.remoteHostname hasPrefix:@"www."]) {
+          // add
+          [endpointNames addObject:[[flow.remoteHostname substringFromIndex:4]
+                                       lowercaseString]];
         }
+      }
     }
-    
-    //first check for "all"
-    // for IPV4 -> '0.0.0.0/0'
-    if( (AF_INET == flow.socketFamily) &&
-        ([self.items containsObject:@"0.0.0.0/0"]) )
-    {
-        isMatch = YES;
-        goto bail;
+
+    // first check for "all"
+    //  for IPV4 -> '0.0.0.0/0'
+    if ((AF_INET == flow.socketFamily) &&
+        ([self.items containsObject:@"0.0.0.0/0"])) {
+      isMatch = YES;
+      goto bail;
     }
-    //for IPV6 -> '::/0'
-    else if( (AF_INET6 == flow.socketFamily) &&
-             ([self.items containsObject:@"::/0"]) )
-    {
-        isMatch = YES;
-        goto bail;
+    // for IPV6 -> '::/0'
+    else if ((AF_INET6 == flow.socketFamily) &&
+             ([self.items containsObject:@"::/0"])) {
+      isMatch = YES;
+      goto bail;
     }
-   
-    //find matches
-    matches = [self.items objectsPassingTest:^BOOL(NSString* item, BOOL* stop) {
-        return [endpointNames containsObject:item];
+
+    // find matches
+    matches = [self.items objectsPassingTest:^BOOL(NSString *item, BOOL *stop) {
+      return [endpointNames containsObject:item];
     }];
-        
-    //any matches?
-    if(0 != matches.count)
-    {
-        //dbg msg
-        os_log_debug(logHandle, "endpoint names %{public}@ matched the following list items %{public}@", endpointNames, matches);
-       
-        //set flag
-        isMatch = YES;
+
+    // any matches?
+    if (0 != matches.count) {
+      // dbg msg
+      os_log_debug(logHandle,
+                   "endpoint names %{public}@ matched the following list items "
+                   "%{public}@",
+                   endpointNames, matches);
+
+      // set flag
+      isMatch = YES;
     }
-        
-    }//sync
-    
+
+    // no match yet?
+    //  check IP prefixes
+    if ((NO == isMatch) && (0 != self.ipPrefixes.count)) {
+      // dbg msg
+      os_log_debug(logHandle, "checking IP prefixes for %{public}@",
+                   remoteEndpoint.hostname);
+
+      // iterate
+      for (NSString *prefix in self.ipPrefixes) {
+        // match?
+        if (YES == [self address:remoteEndpoint.hostname
+                       matchesPrefix:prefix]) {
+          // dbg msg
+          os_log_debug(logHandle, "IP %{public}@ matched prefix %{public}@",
+                       remoteEndpoint.hostname, prefix);
+
+          // set flag
+          isMatch = YES;
+
+          // done
+          break;
+        }
+      }
+    }
+
+  } // sync
+
 bail:
-    
-    return isMatch;
+
+  return isMatch;
 }
 
 @end
