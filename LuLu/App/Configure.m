@@ -220,7 +220,7 @@ bail:
     
     //end LuLu
     // besides this running instance
-    for(NSDictionary* lulu in findProcesses(@"LuLu"))
+    for(NSDictionary* lulu in findProcesses(@"LuLu-Lockdown"))
     {
         //pid
         NSNumber* pid = 0;

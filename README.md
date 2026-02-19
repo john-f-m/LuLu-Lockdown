@@ -12,20 +12,21 @@ This project extends LuLu with stricter connection decision workflows, silent re
 
 ## Feature Set
 
-### Onboarding and initialization
+![LuLu-Lockdown](/docs/images/lulu_text.png)
 
-- First-run setup now asks whether to:
-  - keep baseline allowances (`Apple apps` + `already-installed apps`), or
-  - initialize from the beginning (no baseline auto-allow rules).
+**LuLu-Lockdown** is a privacy-focused fork of the open-source LuLu firewall for macOS. It is designed to proactively block surveillance and tracking while providing high-end network intelligence.
 
-### Decision modes
+### 🛡️ Why Lockdown?
+While the original LuLu is a powerful firewall, **LuLu-Lockdown** adds pre-configured defense layers and advanced visualization, making it the perfect tool for security-conscious users who want to "set it and forget it" without sacrificing deep insight.
 
-- `Strict interactive mode`
-  - prompts you for each new or changed connection.
-  - disables baseline auto-allow shortcuts for Apple/installed apps, DNS auto-allow, and simulator auto-allow.
-- `Silent mode`
-  - allows unknown connections immediately.
-  - queues them for later review where you can convert each queued item into an `Allow` or `Block` rule.
+### ✨ Key Features
+*   **Surveillance Block**: Proactively blocks all traffic to Meta (Facebook/Instagram/WhatsApp) and X (Twitter) using dynamic ASN-based IP ranges.
+*   **Advanced Network Intelligence v2**: A premium, high-security dark-themed dashboard featuring:
+    *   **Interactive Analytics**: Chart.js-powered insights into your top-talking apps and protocol distributions.
+    *   **Dynamic Traffic Map**: Global visualization with animated arcs showing data flow intensity and direction.
+    *   **Audit Logging**: A detailed, searchable log of every connection attempt with integrated risk scoring.
+*   **Simplified Experience**: Pre-configured rules for standard macOS services and common developer tools.
+*   **Open Source**: Transparent, community-driven, and always free.
 - `Passive mode`
   - preserved and still available.
   - remains mutually exclusive with `Strict` and `Silent`.

@@ -27,19 +27,6 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-# ensure dependencies
-NETIQUETTE_PATH="LuLu/Binaries/Netiquette.app"
-if [ ! -d "$NETIQUETTE_PATH" ]; then
-    printf "Dependency missing: Netiquette.app. Fetching from Objective-See releases...\n"
-    mkdir -p LuLu/Binaries
-    cd LuLu/Binaries
-    curl -fsSL -o Netiquette.zip "https://github.com/objective-see/Netiquette/releases/download/v2.3.0/Netiquette_2.3.0.zip"
-    unzip -o Netiquette.zip
-    rm Netiquette.zip
-    cd ../..
-    printf "Netiquette.app successfully downloaded.\n\n"
-fi
-
 # Base command
 BUILD_CMD=(
   xcodebuild

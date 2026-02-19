@@ -20,26 +20,26 @@ enum Signer { None, Apple, AppStore, DevID, AdHoc };
 #define OBJECTIVE_SEE_VENDOR "com.objectiveSee"
 
 // bundle ID
-#define BUNDLE_ID "com.objective-see.lulu"
+#define BUNDLE_ID "com.lulu-lockdown.app"
 
 // extension bundle ID
-#define EXT_BUNDLE_ID @"com.objective-see.lulu.extension"
+#define EXT_BUNDLE_ID @"com.lulu-lockdown.extension"
 
 // main app bundle id
-#define APP_ID @"com.objective-see.lulu.app"
+#define APP_ID @"com.lulu-lockdown.app"
 
 // signing auth
 #define SIGNING_AUTH                                                           \
   @"Developer ID Application: Objective-See, LLC (VBG97UB4TA)"
 
 // firewall event: new flow
-#define LULU_EVENT @"com.objective-see.lulu.event"
+#define LULU_EVENT @"com.lulu-lockdown.app.event"
 
 // lulu service
-#define LULU_SERVICE_NAME "com_objective_see_firewall"
+#define LULU_SERVICE_NAME "com_lulu_lockdown_firewall"
 
 // install directory
-#define INSTALL_DIRECTORY @"/Library/Objective-See/LuLu"
+#define INSTALL_DIRECTORY @"/Library/LuLu-Lockdown"
 
 // preferences file
 #define PREFS_FILE @"preferences.plist"
@@ -66,7 +66,7 @@ enum Signer { None, Apple, AppStore, DevID, AdHoc };
 #define STATUS_CLIENT_ENABLED 1
 
 // daemon mach name
-#define DAEMON_MACH_SERVICE @"VBG97UB4TA.com.objective-see.lulu"
+#define DAEMON_MACH_SERVICE @"com.lulu-lockdown.app"
 
 // rule state; not found
 #define RULE_STATE_NOT_FOUND -1
@@ -246,21 +246,21 @@ enum Signer { None, Apple, AppStore, DevID, AdHoc };
 #define KEY_ERROR_SUB_MSG @"errorSubMsg"
 
 // rules changed
-#define RULES_CHANGED @"com.objective-see.lulu.rulesChanged"
+#define RULES_CHANGED @"com.lulu-lockdown.app.rulesChanged"
 
 // extension event
-#define EXTENSION_EVENT @"com.objective-see.lulu.extensionEvent"
+#define EXTENSION_EVENT @"com.lulu-lockdown.app.extensionEvent"
 
 /* INSTALLER */
 
 // install directory
-#define INSTALL_DIRECTORY @"/Library/Objective-See/LuLu"
+#define INSTALL_DIRECTORY @"/Library/LuLu-Lockdown"
 
 // launch daemon name
-#define LAUNCH_DAEMON_BINARY @"LuLu"
+#define LAUNCH_DAEMON_BINARY @"LuLu-Lockdown"
 
 // launch daemon plist
-#define LAUNCH_DAEMON_PLIST @"com.objective-see.lulu.plist"
+#define LAUNCH_DAEMON_PLIST @"com.lulu-lockdown.app.plist"
 
 // installed apps file
 #define INSTALLED_APPS @"installedApps"
@@ -303,7 +303,7 @@ enum Signer { None, Apple, AppStore, DevID, AdHoc };
 #define ACTION_NEXT_FLAG 3
 
 // app name
-#define APP_NAME @"LuLu.app"
+#define APP_NAME @"LuLu-Lockdown.app"
 
 #define CMDLINE_FLAG_WELCOME @"-welcome"
 #define CMDLINE_FLAG_PREFS @"-prefs"

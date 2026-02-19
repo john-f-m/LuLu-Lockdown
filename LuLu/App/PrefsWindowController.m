@@ -1604,7 +1604,8 @@ bail:
   // destination directory
   NSString *appSupport = [NSSearchPathForDirectoriesInDomains(
       NSApplicationSupportDirectory, NSUserDomainMask, YES) firstObject];
-  NSString *directory = [appSupport stringByAppendingPathComponent:@"LuLu"];
+  NSString *directory =
+      [appSupport stringByAppendingPathComponent:@"LuLu-Lockdown"];
   NSString *path =
       [directory stringByAppendingPathComponent:@"lockdown_bad_actors.txt"];
 
@@ -1657,7 +1658,7 @@ bail:
       @[ NSLocalizedString(@"OK", @"OK") ]);
 }
 
-// open generated traffic insights (graphs + global map)
+// open generated traffic insights v2 (charts + animated global map)
 - (IBAction)openTrafficInsights:(id)sender {
   // events
   NSArray *allEvents =
@@ -1678,16 +1679,19 @@ bail:
   dispatch_async(
       dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         // limit
-        NSUInteger maxEvents = MIN((NSUInteger)500, allEvents.count);
+        NSUInteger maxEvents = MIN((NSUInteger)1000, allEvents.count);
         NSArray *events =
             [allEvents subarrayWithRange:NSMakeRange(0, maxEvents)];
 
-        // protocol and port counters
+        // counters
         NSMutableDictionary *protocolCounts = [NSMutableDictionary dictionary];
-        NSMutableDictionary *portCounts = [NSMutableDictionary dictionary];
+        NSMutableDictionary *appCounts = [NSMutableDictionary dictionary];
 
         // IP candidates for geolocation
         NSMutableOrderedSet *uniqueIPs = [NSMutableOrderedSet orderedSet];
+
+        // risk counts
+        NSInteger blockedCount = 0;
 
         // aggregate
         for (NSDictionary *event in events) {
@@ -1695,28 +1699,22 @@ bail:
           protocolCounts[protocol] =
               @([protocolCounts[protocol] integerValue] + 1);
 
-          NSString *port = event[KEY_ENDPOINT_PORT] ?: @"-";
-          portCounts[port] = @([portCounts[port] integerValue] + 1);
+          NSString *appName = event[KEY_PROCESS_NAME] ?: @"Unknown";
+          appCounts[appName] = @([appCounts[appName] integerValue] + 1);
 
           NSString *endpoint = event[KEY_ENDPOINT_ADDR];
           if (YES == [self isIPAddress:endpoint]) {
             [uniqueIPs addObject:endpoint];
           }
-        }
 
-        // top ports
-        NSArray *topPorts =
-            [portCounts keysSortedByValueUsingComparator:^NSComparisonResult(
-                            NSNumber *left, NSNumber *right) {
-              return [right compare:left];
-            }];
-        if (topPorts.count > 8) {
-          topPorts = [topPorts subarrayWithRange:NSMakeRange(0, 8)];
+          if ([event[KEY_DECISION] isEqualToString:@"block"]) {
+            blockedCount++;
+          }
         }
 
         // resolve geo markers (best effort, capped)
         NSMutableArray *markers = [NSMutableArray array];
-        NSUInteger markerLimit = MIN((NSUInteger)20, uniqueIPs.count);
+        NSUInteger markerLimit = MIN((NSUInteger)50, uniqueIPs.count);
         for (NSUInteger i = 0; i < markerLimit; i++) {
           NSDictionary *geo = [self geoForIP:uniqueIPs[i]];
           if (nil != geo) {
@@ -1727,93 +1725,96 @@ bail:
         // build html
         NSMutableString *html = [NSMutableString string];
         [html appendString:
-                  @"<!doctype html><html><head><meta "
-                  @"charset='utf-8'><title>LuLu Traffic Insights</title>"];
+                  @"<!doctype html><html lang='en'><head><meta "
+                  @"charset='utf-8'><title>LuLu-Lockdown Insights v2</title>"];
         [html appendString:@"<meta name='viewport' "
                            @"content='width=device-width, initial-scale=1'>"];
+
+        // CSS - High Security Dark Theme
         [html
             appendString:
                 @"<link rel='stylesheet' "
                 @"href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css' />"];
         [html
             appendString:
-                @"<style>body{font-family:-apple-system,Helvetica,Arial,sans-"
-                @"serif;background:#f4f7fb;color:#111;margin:0;padding:20px;}"];
+                @"<style>"
+                 "body{font-family:'Sora', -apple-system, sans-serif; "
+                 "background:#0b111a; color:#e1e4e8; margin:0; padding:20px;}"
+                 ".container{max-width:1200px; margin:0 auto;}"
+                 "header{display:flex; justify-content:space-between; "
+                 "align-items:center; margin-bottom:20px; border-bottom:1px "
+                 "solid #1c2635; padding-bottom:15px;}"
+                 "h1{margin:0; font-size:26px; color:#00c5c8; "
+                 "letter-spacing:-0.5px;}"
+                 ".badge{background:rgba(0, 197, 200, 0.1); color:#00c5c8; "
+                 "padding:4px 12px; border-radius:20px; font-size:12px; "
+                 "border:1px solid rgba(0, 197, 200, 0.2);}"
+                 ".grid{display:grid; grid-template-columns: repeat(auto-fit, "
+                 "minmax(300px, 1fr)); gap:20px; margin-bottom:20px;}"
+                 ".card{background:#111a27; border:1px solid #232e3d; "
+                 "border-radius:12px; padding:20px; box-shadow:0 10px 30px "
+                 "rgba(0,0,0,0.3);}"
+                 ".stat-header{display:flex; justify-content:space-between; "
+                 "margin-bottom:15px; border-bottom:1px solid #232e3d; "
+                 "padding-bottom:10px;}"
+                 "h2{margin:0; font-size:16px; color:#8b949e; "
+                 "text-transform:uppercase; letter-spacing:1px;}"
+                 "#map{height:450px; border-radius:12px; background:#111a27; "
+                 "margin-bottom:20px; border:1px solid #232e3d;}"
+                 "table{width:100%; border-collapse:collapse; font-size:13px;}"
+                 "th{text-align:left; color:#8b949e; padding:12px 8px; "
+                 "border-bottom:1px solid #232e3d; font-weight:600;}"
+                 "td{padding:12px 8px; border-bottom:1px solid #1c2635;}"
+                 ".status-allow{color:#2ea043; background:rgba(46, 160, 67, "
+                 "0.1); padding:2px 8px; border-radius:4px;}"
+                 ".status-block{color:#f85149; background:rgba(248, 81, 73, "
+                 "0.1); padding:2px 8px; border-radius:4px;}"
+                 ".muted{color:#8b949e; font-size:12px;}"
+                 "canvas{max-height:250px;}"
+                 ".leaflet-container { background: #0b111a !important; }"
+                 "</style></head><body>"];
+
         [html
-            appendString:@"h1{margin:0 0 6px 0;font-size:24px;}h2{margin:18px "
-                         @"0 8px 0;font-size:18px;}"];
-        [html appendString:@".card{background:#fff;border:1px solid "
-                           @"#dde3ea;border-radius:10px;padding:14px;margin-"
-                           @"bottom:14px;}"];
-        [html appendString:@".bar{margin:8px 0;} .bar "
-                           @".label{font-size:13px;margin-bottom:4px;} .bar "
-                           @".track{height:12px;background:#e8eef7;border-"
-                           @"radius:8px;overflow:hidden;}"];
-        [html appendString:@".bar .fill{height:12px;background:#2f6fec;} "
-                           @"table{width:100%;border-collapse:collapse;font-"
-                           @"size:12px;} th,td{padding:6px;border-bottom:1px "
-                           @"solid #eef2f7;text-align:left;}"];
+            appendFormat:@"<div class='container'><header><h1>LuLu-Lockdown / "
+                         @"Network Intelligence</h1><div class='badge'>Live "
+                         @"Telemetry Dashboard</div></header>"];
+
+        // Stats Row
+        [html
+            appendFormat:
+                @"<div class='grid'>"
+                 "<div class='card'><div class='stat-header'><h2>Active "
+                 "Processes</h2></div><canvas id='appChart'></canvas></div>"
+                 "<div class='card'><div class='stat-header'><h2>Security "
+                 "Overview</h2></div>"
+                 "<div style='display:flex; height:200px; align-items:center; "
+                 "justify-content:center; flex-direction:column;'>"
+                 "<div style='font-size:48px; font-weight:700; "
+                 "color:#e1e4e8;'>%lu</div><div class='muted'>Total Events "
+                 "Analysed</div>"
+                 "<div style='margin-top:20px; color:#f85149; "
+                 "font-weight:600;'>%ld Blocked Attempts</div>"
+                 "</div></div>"
+                 "<div class='card'><div "
+                 "class='stat-header'><h2>Protocols</h2></div><canvas "
+                 "id='protocolChart'></canvas></div>"
+                 "</div>",
+                (unsigned long)events.count, (long)blockedCount];
+
+        // Map Section
         [html
             appendString:
-                @"#map{height:420px;border-radius:10px;overflow:hidden;border:"
-                @"1px solid #dde3ea;} .muted{color:#5f6b7a;font-size:12px;} "
-                @"</style></head><body>"];
+                @"<div class='card'><div class='stat-header'><h2>Global "
+                @"Traffic Visualization</h2></div><div id='map'></div></div>"];
 
-        [html appendFormat:@"<h1>LuLu Traffic Insights</h1><div "
-                           @"class='muted'>Generated %@</div>",
-                           [NSDate date]];
-
-        // protocol chart
-        [html appendString:@"<div class='card'><h2>Protocol Distribution</h2>"];
-        NSInteger protocolMax = 1;
-        for (NSNumber *count in protocolCounts.allValues) {
-          if (count.integerValue > protocolMax)
-            protocolMax = count.integerValue;
-        }
-        for (NSString *key in [protocolCounts
-                 keysSortedByValueUsingComparator:^NSComparisonResult(
-                     NSNumber *left, NSNumber *right) {
-                   return [right compare:left];
-                 }]) {
-          NSInteger count = [protocolCounts[key] integerValue];
-          NSInteger pct = (NSInteger)((count * 100.0f) / protocolMax);
-          [html appendFormat:@"<div class='bar'><div class='label'>%@ "
-                             @"(%ld)</div><div class='track'><div class='fill' "
-                             @"style='width:%ld%%'></div></div></div>",
-                             [self htmlEscape:key], (long)count, (long)pct];
-        }
-        [html appendString:@"</div>"];
-
-        // port chart
-        [html appendString:@"<div class='card'><h2>Top Destination Ports</h2>"];
-        NSInteger portMax = 1;
-        for (NSString *port in topPorts) {
-          NSInteger count = [portCounts[port] integerValue];
-          if (count > portMax)
-            portMax = count;
-        }
-        for (NSString *port in topPorts) {
-          NSInteger count = [portCounts[port] integerValue];
-          NSInteger pct = (NSInteger)((count * 100.0f) / portMax);
-          [html appendFormat:@"<div class='bar'><div class='label'>%@ "
-                             @"(%ld)</div><div class='track'><div class='fill' "
-                             @"style='width:%ld%%'></div></div></div>",
-                             [self htmlEscape:port], (long)count, (long)pct];
-        }
-        [html appendString:@"</div>"];
-
-        // map
-        [html appendString:@"<div class='card'><h2>Global Outgoing Traffic Map "
-                           @"(IP-based)</h2><div id='map'></div><div "
-                           @"class='muted'>Markers are best-effort geo lookups "
-                           @"for remote IPs.</div></div>"];
-
-        // recent table
+        // Connection Table
         [html appendString:
-                  @"<div class='card'><h2>Recent "
-                  @"Connections</h2><table><thead><tr><th>Time</th><th>App</"
-                  @"th><th>Endpoint</th><th>Port</th><th>Protocol</"
-                  @"th><th>Decision</th><th>Reason</th></tr></thead><tbody>"];
+                  @"<div class='card'><div class='stat-header'><h2>Detailed "
+                  @"Audit Log</h2></div>"
+                   "<table><thead><tr><th>Time</th><th>Application</"
+                   "th><th>Destination</th><th>Port</th><th>Result</"
+                   "th><th>Intelligence</th></tr></thead><tbody>"];
+
         for (NSDictionary *event in events) {
           NSDate *timestamp =
               [event[KEY_TIMESTAMP] isKindOfClass:[NSDate class]]
@@ -1823,22 +1824,33 @@ bail:
               localizedStringFromDate:timestamp
                             dateStyle:NSDateFormatterNoStyle
                             timeStyle:NSDateFormatterMediumStyle];
-          [html
-              appendFormat:@"<tr><td>%@</td><td>%@</td><td>%@</td><td>%@</"
-                           @"td><td>%@</td><td>%@</td><td>%@</td></tr>",
-                           [self htmlEscape:time],
-                           [self htmlEscape:event[KEY_PROCESS_NAME] ?: @"-"],
-                           [self htmlEscape:event[KEY_ENDPOINT_ADDR] ?: @"-"],
-                           [self htmlEscape:event[KEY_ENDPOINT_PORT] ?: @"-"],
-                           [self
-                               htmlEscape:[self protocolName:event[KEY_PROTOCOL]
-                                                                 ?: @0]],
-                           [self htmlEscape:event[KEY_DECISION] ?: @"-"],
-                           [self htmlEscape:event[KEY_REASON] ?: @"-"]];
-        }
-        [html appendString:@"</tbody></table></div>"];
 
-        // map script
+          BOOL isBlocked = [event[KEY_DECISION] isEqualToString:@"block"];
+
+          [html appendFormat:
+                    @"<tr><td>%@</td><td "
+                    @"style='font-weight:600;'>%@</td><td>%@</td><td>%@</"
+                    @"td><td><span class='%@'>%@</span></td><td "
+                    @"class='muted'>%@</td></tr>",
+                    [self htmlEscape:time],
+                    [self htmlEscape:event[KEY_PROCESS_NAME] ?: @"-"],
+                    [self htmlEscape:event[KEY_ENDPOINT_ADDR] ?: @"-"],
+                    [self htmlEscape:event[KEY_ENDPOINT_PORT] ?: @"-"],
+                    isBlocked ? @"status-block" : @"status-allow",
+                    [self htmlEscape:event[KEY_DECISION] ?: @"-"],
+                    [self htmlEscape:event[KEY_REASON] ?: @"-"]];
+        }
+        [html appendString:@"</tbody></table></div></div>"];
+
+        // Scripts - Chart.js & Map Logic
+        [html appendString:
+                  @"<script "
+                  @"src='https://cdn.jsdelivr.net/npm/chart.js'></script>"];
+        [html appendString:@"<script "
+                           @"src='https://unpkg.com/leaflet@1.9.4/dist/"
+                           @"leaflet.js'></script>"];
+
+        // Build JSON maps for JS
         NSData *markerData = [NSJSONSerialization dataWithJSONObject:markers
                                                              options:0
                                                                error:nil];
@@ -1846,30 +1858,101 @@ bail:
             [[NSString alloc] initWithData:markerData
                                   encoding:NSUTF8StringEncoding]
                 ?: @"[]";
-        [html appendString:@"<script "
-                           @"src='https://unpkg.com/leaflet@1.9.4/dist/"
-                           @"leaflet.js'></script><script>"];
-        [html appendFormat:@"const markers=%@;", markerJSON];
-        [html appendString:@"const map=L.map('map').setView([20,0],2);"];
-        [html appendString:@"L.tileLayer('https://{s}.tile.openstreetmap.org/"
-                           @"{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; "
-                           @"OpenStreetMap contributors'}).addTo(map);"];
+
+        // App Counts Data
+        NSMutableArray *appLabels = [NSMutableArray array];
+        NSMutableArray *appValues = [NSMutableArray array];
+        NSArray *sortedApps = [appCounts
+            keysSortedByValueUsingComparator:^NSComparisonResult(id obj1,
+                                                                 id obj2) {
+              return [obj2 compare:obj1];
+            }];
+        for (NSUInteger i = 0; i < MIN((NSUInteger)6, sortedApps.count); i++) {
+          [appLabels addObject:[self htmlEscape:sortedApps[i]]];
+          [appValues addObject:appCounts[sortedApps[i]]];
+        }
+
+        // Protocol Counts Data
+        NSMutableArray *protoLabels = [NSMutableArray array];
+        NSMutableArray *protoValues = [NSMutableArray array];
+        for (NSString *key in protocolCounts.allKeys) {
+          [protoLabels addObject:[self htmlEscape:key]];
+          [protoValues addObject:protocolCounts[key]];
+        }
+
+        [html appendString:@"<script>"];
+        [html appendFormat:@"const markersData = %@;", markerJSON];
+        [html appendFormat:@"const appLabels = %@; const appValues = %@;",
+                           [[NSString alloc]
+                               initWithData:[NSJSONSerialization
+                                                dataWithJSONObject:appLabels
+                                                           options:0
+                                                             error:nil]
+                                   encoding:NSUTF8StringEncoding],
+                           [[NSString alloc]
+                               initWithData:[NSJSONSerialization
+                                                dataWithJSONObject:appValues
+                                                           options:0
+                                                             error:nil]
+                                   encoding:NSUTF8StringEncoding]];
+        [html appendFormat:@"const protoLabels = %@; const protoValues = %@;",
+                           [[NSString alloc]
+                               initWithData:[NSJSONSerialization
+                                                dataWithJSONObject:protoLabels
+                                                           options:0
+                                                             error:nil]
+                                   encoding:NSUTF8StringEncoding],
+                           [[NSString alloc]
+                               initWithData:[NSJSONSerialization
+                                                dataWithJSONObject:protoValues
+                                                           options:0
+                                                             error:nil]
+                                   encoding:NSUTF8StringEncoding]];
+
+        [html appendString:@"Chart.defaults.color = '#8b949e'; "
+                           @"Chart.defaults.borderColor = '#1c2635';"];
+
+        // Protocol Chart
         [html
             appendString:
-                @"if(markers.length===0){document.getElementById('map')."
-                @"innerHTML='<div style=\"padding:16px;color:#5f6b7a;\">No IP "
-                @"geolocation data available for current events.</div>'; }"];
-        [html appendString:
-                  @"const bounds=[]; markers.forEach(m=>{ const "
-                  @"label=[m.ip,m.city,m.country].filter(Boolean).join(' - '); "
-                  @"L.marker([m.lat,m.lon]).addTo(map).bindPopup(label); "
-                  @"bounds.push([m.lat,m.lon]); }); if(bounds.length){ "
-                  @"map.fitBounds(bounds,{padding:[30,30]}); }"];
+                @"new Chart(document.getElementById('protocolChart'), { type: "
+                @"'doughnut', data: { labels: protoLabels, datasets: [{ data: "
+                @"protoValues, backgroundColor: ['#00c5c8', '#0077ff', "
+                @"'#ff7a00', '#2ea043'], borderWidth: 0 }] }, options: { "
+                @"plugins: { legend: { position: 'right' } } } });"];
+
+        // App Chart
+        [html
+            appendString:
+                @"new Chart(document.getElementById('appChart'), { type: "
+                @"'bar', data: { labels: appLabels, datasets: [{ label: "
+                @"'Connections', data: appValues, backgroundColor: '#0077ff', "
+                @"borderRadius: 4 }] }, options: { scales: { y: { beginAtZero: "
+                @"true } }, plugins: { legend: { display:false } } } });"];
+
+        // Map Implementation (Dark)
+        [html appendString:@"const map = L.map('map', {zoomControl: "
+                           @"false}).setView([20, 0], 2);"];
+        [html
+            appendString:
+                @"L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/"
+                @"{x}/{y}{r}.png', { attribution: 'CartoDB' }).addTo(map);"];
+
+        [html appendString:@"const bounds = []; markersData.forEach(m => {"
+                            "const marker = L.circleMarker([m.lat, m.lon], { "
+                            "radius: 6, fillColor: '#00c5c8', color: '#fff', "
+                            "weight: 1, fillOpacity: 0.8 }).addTo(map);"
+                            "marker.bindPopup(`<b>${m.ip}</b><br>${m.city || "
+                            "''} ${m.country || ''}`);"
+                            "bounds.push([m.lat, m.lon]);"
+                            "}); if(bounds.length) map.fitBounds(bounds, "
+                            "{padding: [50, 50]});"];
+
         [html appendString:@"</script></body></html>"];
 
         // write file
         NSString *output = [NSTemporaryDirectory()
-            stringByAppendingPathComponent:@"lulu-traffic-insights.html"];
+            stringByAppendingPathComponent:@"lulu-lockdown-intelligence.html"];
         NSError *writeError = nil;
         BOOL written = [html writeToFile:output
                               atomically:YES
@@ -1880,8 +1963,8 @@ bail:
         dispatch_async(dispatch_get_main_queue(), ^{
           if (YES != written) {
             showAlert(NSAlertStyleWarning,
-                      NSLocalizedString(@"Failed to Build Insights",
-                                        @"Failed to Build Insights"),
+                      NSLocalizedString(@"Failed to Build Intelligence",
+                                        @"Failed to Build Intelligence"),
                       writeError.localizedDescription
                           ?: NSLocalizedString(
                                  @"Unknown error while writing insights file.",

@@ -23,9 +23,9 @@
         <customObject id="YLy-65-1bz" customClass="NSFontManager"/>
         <menu title="Main Menu" systemMenu="main" autoenablesItems="NO" id="uhX-d8-iZM">
             <items>
-                <menuItem title="LuLu" id="aJV-EX-6bj" userLabel="LuLu">
+                <menuItem title="LuLu-Lockdown" id="aJV-EX-6bj" userLabel="LuLu">
                     <modifierMask key="keyEquivalentModifierMask"/>
-                    <menu key="submenu" title="LuLu" systemMenu="apple" id="J1I-fS-R65">
+                    <menu key="submenu" title="LuLu-Lockdown" systemMenu="apple" id="J1I-fS-R65">
                         <items>
                             <menuItem title="About LuLu" id="q1D-fP-yr1" userLabel="About LuLu">
                                 <modifierMask key="keyEquivalentModifierMask"/>

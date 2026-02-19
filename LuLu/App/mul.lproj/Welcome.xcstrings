@@ -447,73 +447,73 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LuLu"
+            "value" : "LuLu-Lockdown"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "LuLu"
+            "value" : "LuLu-Lockdown"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LuLu"
+            "value" : "LuLu-Lockdown"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LuLu"
+            "value" : "LuLu-Lockdown"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LuLu"
+            "value" : "LuLu-Lockdown"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LuLu"
+            "value" : "LuLu-Lockdown"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LuLu"
+            "value" : "LuLu-Lockdown"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LuLu"
+            "value" : "LuLu-Lockdown"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LuLu"
+            "value" : "LuLu-Lockdown"
           }
         },
         "ur" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LuLu"
+            "value" : "LuLu-Lockdown"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LuLu"
+            "value" : "LuLu-Lockdown"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "LuLu"
+            "value" : "LuLu-Lockdown"
           }
         }
       },
